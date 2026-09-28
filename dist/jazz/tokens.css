@@ -7,7 +7,7 @@
   --color-accent-muted: light-dark(rgba(20, 106, 255, 0.2), rgba(20, 106, 255, 0.25));
   --color-background-blue: #0171E333;
   --color-background-body: light-dark(#F5F5F5, #121212);
-  --color-background-card: light-dark(#FFFFFF, #000000);
+  --color-background-card: light-dark(#FFFFFF, #171717);
   --color-background-cyan: #03A7D733;
   --color-background-error-inverted: light-dark(#AA071E, #E3193B);
   --color-background-gray: light-dark(#0A131733, #666A724C);
@@ -22,7 +22,7 @@
   --color-background-surface: light-dark(#FFFFFF, #0A0A0A);
   --color-background-teal: #0DB7AF33;
   --color-background-yellow: #E2A40033;
-  --color-border: light-dark(#CCCCCC80, #66666633);
+  --color-border: light-dark(#CCCCCC80, #FFFFFF1F);
   --color-border-blue: light-dark(#0064E0, #2694FE);
   --color-border-cyan: light-dark(#089DD0, #0171A4);
   --color-border-emphasized: light-dark(#90909A, #686771);

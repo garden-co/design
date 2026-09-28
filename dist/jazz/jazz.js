@@ -35,10 +35,10 @@ export const jazzTheme = {
     "--color-icon-primary": "light-dark(#1B1B1F, #E2E2E8)",
     "--color-icon-secondary": "light-dark(#46464F, #ABAAB5)",
     "--color-icon-disabled": "light-dark(#90909A, #5E5D67)",
-    "--color-background-card": "light-dark(#FFFFFF, #000000)",
+    "--color-background-card": "light-dark(#FFFFFF, #171717)",
     "--color-background-popover": "light-dark(#FFFFFF, #0A0A0A)",
     "--color-background-inverted": "light-dark(#1B1B1F, #FCFCFF)",
-    "--color-border": "light-dark(#CCCCCC80, #66666633)",
+    "--color-border": "light-dark(#CCCCCC80, #FFFFFF1F)",
     "--color-border-emphasized": "light-dark(#90909A, #686771)",
     "--color-skeleton": "light-dark(#ABAAB5, #46464F)",
     "--color-track": "light-dark(#ABAAB5, #46464F)",
@@ -237,6 +237,37 @@ export const jazzTheme = {
       "base": {
         "borderRadius": "1rem",
         "padding": "1rem"
+      }
+    },
+    "clickable-card": {
+      "base": {
+        "transitionProperty": "border-color, background-color",
+        "transitionDuration": "var(--duration-fast)",
+        ":hover": {
+          "borderColor": "color-mix(in srgb, var(--color-text-secondary) 55%, transparent)"
+        }
+      }
+    },
+    "top-nav": {
+      "base": {
+        "paddingBlock": "14px",
+        "paddingInline": "16px"
+      }
+    },
+    "top-nav-item": {
+      "base": {
+        "paddingInline": "16px"
+      }
+    },
+    "side-nav": {
+      "base": {
+        "paddingInline": "12px"
+      }
+    },
+    "side-nav-item": {
+      "base": {
+        "minHeight": "36px",
+        "paddingInline": "12px"
       }
     },
     "link": {

@@ -60,13 +60,16 @@ export const jazzTheme = defineTheme({
     // popovers are plain white / near-black, like the homepage's aside.
     '--color-background-body': ['#F5F5F5', '#121212'],
     '--color-background-surface': ['#FFFFFF', '#0A0A0A'],
-    '--color-background-card': ['#FFFFFF', '#000000'],
+    // Dark cards sit one step above the surface (not below it), so a card
+    // reads as a raised object rather than a hole in the page.
+    '--color-background-card': ['#FFFFFF', '#171717'],
     '--color-background-popover': ['#FFFFFF', '#0A0A0A'],
     '--color-text-primary': ['#0A0A0A', '#EBEBEB'],
     // #737373 (the site's muted grey) is 4.35:1 on #F5F5F5; #6B6B6B passes AA.
     // #939393 is the site's dark muted grey (70% at 0.8 alpha) flattened.
     '--color-text-secondary': ['#6B6B6B', '#939393'],
-    '--color-border': ['#CCCCCC80', '#66666633'],
+    // Dark borders at 12% white stay visible on both #0A0A0A and #171717.
+    '--color-border': ['#CCCCCC80', '#FFFFFF1F'],
     '--focus-outline-color': 'var(--color-accent)',
   },
 
@@ -107,6 +110,29 @@ export const jazzTheme = defineTheme({
     // Homepage cards: rounded-2xl, p-4.
     card: {
       base: {borderRadius: '1rem', padding: '1rem'},
+    },
+    // Clickable cards (docs cards, prev/next) strengthen their border on
+    // hover in addition to Astryx's tint, so they read as targets.
+    'clickable-card': {
+      base: {
+        transitionProperty: 'border-color, background-color',
+        transitionDuration: 'var(--duration-fast)',
+        ':hover': {borderColor: 'color-mix(in srgb, var(--color-text-secondary) 55%, transparent)'},
+      },
+    },
+    // Roomier navigation: a 64px top bar with 16px gutters, wider top nav
+    // items, and side nav items inset to line up with the top nav's logo.
+    'top-nav': {
+      base: {paddingBlock: '14px', paddingInline: '16px'},
+    },
+    'top-nav-item': {
+      base: {paddingInline: '16px'},
+    },
+    'side-nav': {
+      base: {paddingInline: '12px'},
+    },
+    'side-nav-item': {
+      base: {minHeight: '36px', paddingInline: '12px'},
     },
     // Small uppercase section labels ("JAZZ CLOUD", pricing meter names).
     text: {
