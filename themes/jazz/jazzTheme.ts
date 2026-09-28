@@ -1,4 +1,4 @@
-import {defineTheme} from '@astryxdesign/core/theme';
+import {defineTheme, type DefineThemeInput} from '@astryxdesign/core/theme';
 
 /**
  * Jazz theme, extracted from the jazz.tools homepage
@@ -17,7 +17,11 @@ const LOGO_BLUE = '#146AFF';
 const LOGO_BLUE_TEXT_ON_LIGHT = '#1263F0';
 const LOGO_BLUE_ON_DARK = '#3D84FF';
 
-export const jazzTheme = defineTheme({
+/**
+ * The raw theme input, exported so tools such as the kitchen sink's settings
+ * overlay can derive live variants from it.
+ */
+export const jazzThemeInput = {
   name: 'jazz',
 
   // Greys stay neutral to match the homepage's Fumadocs neutral palette.
@@ -164,4 +168,6 @@ export const jazzTheme = defineTheme({
       },
     },
   },
-});
+} satisfies DefineThemeInput;
+
+export const jazzTheme = defineTheme(jazzThemeInput);

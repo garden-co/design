@@ -59,6 +59,22 @@ pnpm build   # rebuild dist/ after editing a theme, then commit it
 pnpm check   # what CI runs: fails when dist/ is stale
 ```
 
+### Kitchen sink
+
+```sh
+pnpm install
+pnpm sink    # http://localhost:5173
+```
+
+`kitchen-sink/` is a local app that renders every Astryx component in the Jazz
+theme, three ways: a component overview, a docs page and a dashboard screen
+assembled the way the real products assemble them. A settings panel re-themes
+everything live (mode, accent, greys, contrast, type scale and faces, radius,
+pinned colours, component overrides as JSON). Changes stay in your browser;
+**Copy changes** puts a JSON diff against `jazzTheme.ts` on the clipboard to
+paste back into the theme. It loads the proprietary fonts, so only deploy it
+somewhere private to Garden Computing.
+
 `dist/` is committed on purpose: git dependencies are installed without
 running build scripts.
 
