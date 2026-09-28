@@ -52,11 +52,16 @@ export const jazzTheme = defineTheme({
     '--color-on-accent': ['#FFFFFF', '#FFFFFF'],
     '--color-text-accent': [LOGO_BLUE, LOGO_BLUE_ON_DARK],
     '--color-icon-accent': [LOGO_BLUE, LOGO_BLUE_ON_DARK],
-    // Homepage surfaces are plain white / black with neutral text.
-    '--color-background-body': ['#FFFFFF', '#000000'],
+    // The live site's page, text and border colours (Fumadocs neutral), so
+    // Astryx regions sit seamlessly inside jazz.tools and its docs. Cards and
+    // popovers are plain white / near-black, like the homepage's aside.
+    '--color-background-body': ['#F5F5F5', '#121212'],
     '--color-background-surface': ['#FFFFFF', '#0A0A0A'],
-    '--color-text-primary': ['#0A0A0A', '#FAFAFA'],
+    '--color-background-card': ['#FFFFFF', '#0A0A0A'],
+    '--color-background-popover': ['#FFFFFF', '#0A0A0A'],
+    '--color-text-primary': ['#0A0A0A', '#EBEBEB'],
     '--color-text-secondary': ['#737373', '#A3A3A3'],
+    '--color-border': ['#CCCCCC80', '#66666633'],
     '--focus-outline-color': 'var(--color-accent)',
   },
 
