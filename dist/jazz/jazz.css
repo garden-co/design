@@ -369,6 +369,15 @@
     line-height: var(--text-display-3-leading);
   }
 
+  .astryx-text[data-type="eyebrow"] {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-xsm);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
   .astryx-card {
     border-radius: var(--radius-container);
     --_card-radius: var(--radius-container);

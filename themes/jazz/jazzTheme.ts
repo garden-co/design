@@ -80,5 +80,16 @@ export const jazzTheme = defineTheme({
     card: {
       base: {borderRadius: 'var(--radius-container)'},
     },
+    // Small uppercase section labels ("JAZZ CLOUD", pricing meter names).
+    text: {
+      'type:eyebrow': {
+        fontFamily: 'var(--font-family-heading)',
+        fontSize: 'var(--font-size-xsm)',
+        fontWeight: 'var(--font-weight-semibold)',
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        color: 'var(--color-text-secondary)',
+      },
+    },
   },
 });

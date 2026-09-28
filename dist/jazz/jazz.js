@@ -221,6 +221,14 @@ export const jazzTheme = {
         "fontFamily": "var(--font-family-heading)",
         "fontSize": "var(--text-display-3-size)",
         "lineHeight": "var(--text-display-3-leading)"
+      },
+      "type:eyebrow": {
+        "fontFamily": "var(--font-family-heading)",
+        "fontSize": "var(--font-size-xsm)",
+        "fontWeight": "var(--font-weight-semibold)",
+        "letterSpacing": "0.18em",
+        "textTransform": "uppercase",
+        "color": "var(--color-text-secondary)"
       }
     },
     "card": {
