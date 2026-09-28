@@ -12,6 +12,7 @@ from the jazz.tools homepage.
 | `dist/jazz/jazz.{js,css}` | Built Astryx theme for React apps (`<Theme theme={…}>`)  |
 | `dist/jazz/tokens.css`    | Every token resolved on `:root`, for non-React code       |
 | `themes/jazz/fonts.css`   | `@font-face` rules for the families the theme names       |
+| `react/`                  | Small React helpers for theme-only variants (`Eyebrow`)   |
 | `fonts/`                  | Font files, each under its **own** licence (see below)    |
 
 ## Install

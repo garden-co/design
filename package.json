@@ -14,12 +14,17 @@
     "./jazz/theme.css": "./dist/jazz/jazz.css",
     "./jazz/tokens.css": "./dist/jazz/tokens.css",
     "./jazz/fonts.css": "./themes/jazz/fonts.css",
-    "./fonts/*": "./fonts/*"
+    "./fonts/*": "./fonts/*",
+    "./react": {
+      "types": "./react/index.d.ts",
+      "default": "./react/index.js"
+    }
   },
   "files": [
     "dist",
     "fonts",
-    "themes/jazz/fonts.css"
+    "themes/jazz/fonts.css",
+    "react"
   ],
   "scripts": {
     "build": "tsx scripts/build.mjs",
@@ -30,8 +35,12 @@
     "react": ">=19"
   },
   "peerDependenciesMeta": {
-    "@astryxdesign/core": { "optional": true },
-    "react": { "optional": true }
+    "@astryxdesign/core": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.6.3",
