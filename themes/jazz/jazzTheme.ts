@@ -9,10 +9,12 @@ import {defineTheme} from '@astryxdesign/core/theme';
  */
 
 // Jazz logo mark blue (garden-co/jazz: docs/components/brand/jazz-logo.tsx).
-// #146AFF is 4.63:1 against white, so it carries a white label and works as
-// light-mode text. On near-black it falls to 4.28:1, so accent-coloured text
-// and icons use a lighter step in dark mode (5.6:1 on #0A0A0A).
+// As a fill it carries a white label at 4.63:1. As text it is only 4.25:1 on
+// the #F5F5F5 page and 4.28:1 on near-black, so accent-coloured text and icons
+// use one step darker in light mode (4.73:1 on #F5F5F5) and one step lighter
+// in dark mode (5.3:1 on #121212).
 const LOGO_BLUE = '#146AFF';
+const LOGO_BLUE_TEXT_ON_LIGHT = '#1263F0';
 const LOGO_BLUE_ON_DARK = '#3D84FF';
 
 export const jazzTheme = defineTheme({
@@ -50,8 +52,8 @@ export const jazzTheme = defineTheme({
     // The generator re-tones the seed; pin the logo blue exactly.
     '--color-accent': [LOGO_BLUE, LOGO_BLUE],
     '--color-on-accent': ['#FFFFFF', '#FFFFFF'],
-    '--color-text-accent': [LOGO_BLUE, LOGO_BLUE_ON_DARK],
-    '--color-icon-accent': [LOGO_BLUE, LOGO_BLUE_ON_DARK],
+    '--color-text-accent': [LOGO_BLUE_TEXT_ON_LIGHT, LOGO_BLUE_ON_DARK],
+    '--color-icon-accent': [LOGO_BLUE_TEXT_ON_LIGHT, LOGO_BLUE_ON_DARK],
     // The live site's page, text and border colours (Fumadocs neutral), so
     // Astryx regions sit seamlessly inside jazz.tools and its docs. Cards and
     // popovers are plain white / near-black, like the homepage's aside.
@@ -60,7 +62,8 @@ export const jazzTheme = defineTheme({
     '--color-background-card': ['#FFFFFF', '#0A0A0A'],
     '--color-background-popover': ['#FFFFFF', '#0A0A0A'],
     '--color-text-primary': ['#0A0A0A', '#EBEBEB'],
-    '--color-text-secondary': ['#737373', '#A3A3A3'],
+    // #737373 (the site's muted grey) is 4.35:1 on #F5F5F5; #6B6B6B passes AA.
+    '--color-text-secondary': ['#6B6B6B', '#A3A3A3'],
     '--color-border': ['#CCCCCC80', '#66666633'],
     '--focus-outline-color': 'var(--color-accent)',
   },
