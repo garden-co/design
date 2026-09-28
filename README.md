@@ -17,11 +17,13 @@ from the jazz.tools homepage.
 
 ## Install
 
-Not on npm yet. Install from git, pinned to a tag:
+Not on npm and not tagged yet. Install from git, pinned to a full commit hash on `main`:
 
 ```sh
-pnpm add github:garden-co/design#v0.1.0
+pnpm add github:garden-co/design#<commit-sha>
 ```
+
+Bump the pin when a consumer needs a newer theme. Tagged releases and npm publishing come later, once the system settles.
 
 ## Use
 
