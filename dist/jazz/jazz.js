@@ -131,7 +131,7 @@ export const jazzTheme = {
         "fontFamily": "var(--font-family-heading)",
         "fontSize": "clamp(1.875rem, 4vw, 2.6rem)",
         "fontWeight": "900",
-        "lineHeight": "var(--text-heading-2-leading)"
+        "lineHeight": "0.9"
       },
       "level:3": {
         "fontFamily": "var(--font-family-heading)",
@@ -167,13 +167,16 @@ export const jazzTheme = {
       "type:display-2": {
         "fontFamily": "var(--font-family-heading)",
         "fontSize": "clamp(3rem, 7vw, 5.5rem)",
-        "lineHeight": "var(--text-display-2-leading)",
-        "fontWeight": "900"
+        "lineHeight": "0.9",
+        "fontWeight": "900",
+        "letterSpacing": "-0.06em"
       },
       "type:display-3": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "var(--text-display-3-size)",
-        "lineHeight": "var(--text-display-3-leading)"
+        "fontSize": "var(--font-size-4xl)",
+        "lineHeight": "1",
+        "fontWeight": "900",
+        "letterSpacing": "-0.06em"
       },
       "base": {
         "letterSpacing": "-0.04em",

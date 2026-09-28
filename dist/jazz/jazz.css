@@ -263,7 +263,7 @@
     font-family: var(--font-family-heading);
     font-size: clamp(1.875rem, 4vw, 2.6rem);
     font-weight: 900;
-    line-height: var(--text-heading-2-leading);
+    line-height: 0.9;
   }
 
   .astryx-heading[data-level="3"] {
@@ -305,14 +305,17 @@
   .astryx-heading[data-type="display-2"] {
     font-family: var(--font-family-heading);
     font-size: clamp(3rem, 7vw, 5.5rem);
-    line-height: var(--text-display-2-leading);
+    line-height: 0.9;
     font-weight: 900;
+    letter-spacing: -0.06em;
   }
 
   .astryx-heading[data-type="display-3"] {
     font-family: var(--font-family-heading);
-    font-size: var(--text-display-3-size);
-    line-height: var(--text-display-3-leading);
+    font-size: var(--font-size-4xl);
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.06em;
   }
 
   .astryx-heading {

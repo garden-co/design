@@ -65,7 +65,12 @@ export const jazzTheme = defineTheme({
     // tracking, balanced wrapping.
     heading: {
       base: {letterSpacing: '-0.04em', lineHeight: '0.9', textWrap: 'balance'},
-      'level:2': {fontSize: 'clamp(1.875rem, 4vw, 2.6rem)', fontWeight: '900'},
+      // Level rules set their own line-height, so repeat the tight leading.
+      'level:2': {
+        fontSize: 'clamp(1.875rem, 4vw, 2.6rem)',
+        fontWeight: '900',
+        lineHeight: '0.9',
+      },
       'type:display-1': {
         fontSize: 'clamp(4rem, 11vw, 10rem)',
         lineHeight: '0.84',
@@ -75,6 +80,15 @@ export const jazzTheme = defineTheme({
       'type:display-2': {
         fontSize: 'clamp(3rem, 7vw, 5.5rem)',
         fontWeight: '900',
+        lineHeight: '0.9',
+        letterSpacing: '-0.06em',
+      },
+      // Big figures such as pricing meters.
+      'type:display-3': {
+        fontSize: 'var(--font-size-4xl)',
+        fontWeight: '900',
+        lineHeight: '1',
+        letterSpacing: '-0.06em',
       },
     },
     card: {
