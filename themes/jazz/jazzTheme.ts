@@ -24,8 +24,9 @@ export const jazzTheme = defineTheme({
   color: {accent: LOGO_BLUE, neutralStyle: 'neutral', contrast: 'standard'},
 
   typography: {
-    // Homepage body copy is 16px under a dramatic heading scale.
-    scale: {base: 16, ratio: 1.25},
+    // 16px body; 1.125 keeps the small steps near the site's Tailwind sizes
+    // (sm ≈ 14px, lg = 18px, xl ≈ 20px).
+    scale: {base: 16, ratio: 1.125},
     body: {
       family: 'body_font',
       fallbacks: 'ui-sans-serif, system-ui, sans-serif',
@@ -85,17 +86,18 @@ export const jazzTheme = defineTheme({
         letterSpacing: '-0.05em',
         fontWeight: '900',
       },
+      // "npm create jazz" footer line.
       'type:display-2': {
-        fontSize: 'clamp(3rem, 7vw, 5.5rem)',
+        fontSize: 'clamp(2.75rem, 5vw, 6rem)',
         fontWeight: '900',
         lineHeight: '0.9',
         letterSpacing: '-0.06em',
       },
       // Big figures such as pricing meters.
       'type:display-3': {
-        fontSize: 'var(--font-size-4xl)',
+        fontSize: '2.25rem',
         fontWeight: '900',
-        lineHeight: '1',
+        lineHeight: '2.5rem',
         letterSpacing: '-0.06em',
       },
     },
@@ -104,13 +106,24 @@ export const jazzTheme = defineTheme({
     },
     // Small uppercase section labels ("JAZZ CLOUD", pricing meter names).
     text: {
+      // Colour comes from the component's `color` prop (the Eyebrow helper
+      // passes "secondary"); a colour here would lose to data-color rules.
       'type:eyebrow': {
         fontFamily: 'var(--font-family-heading)',
-        fontSize: 'var(--font-size-xsm)',
+        fontSize: '0.75rem',
+        lineHeight: '1rem',
         fontWeight: 'var(--font-weight-semibold)',
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
-        color: 'var(--color-text-secondary)',
+      },
+    },
+    // Inline links stay underlined so they never rely on colour alone
+    // (WCAG 1.4.1), matching the homepage's muted underline.
+    link: {
+      base: {
+        textDecorationLine: 'underline',
+        textDecorationColor: 'color-mix(in srgb, var(--color-text-secondary) 60%, transparent)',
+        textUnderlineOffset: '4px',
       },
     },
   },

@@ -7,5 +7,5 @@ import {Text} from '@astryxdesign/core/Text';
  * `TextType` (text types are a closed union, not an augmentable interface).
  */
 export function Eyebrow({as = 'p', ...props}) {
-  return jsx(Text, {...props, as, display: 'block', type: 'eyebrow'});
+  return jsx(Text, {color: 'secondary', ...props, as, display: 'block', type: 'eyebrow'});
 }

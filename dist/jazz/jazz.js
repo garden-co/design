@@ -44,42 +44,42 @@ export const jazzTheme = {
     "--color-track": "light-dark(#ABAAB5, #46464F)",
     "--color-shadow": "light-dark(#0000001A, #0000004D)",
     "--color-tint-hover": "light-dark(black, white)",
-    "--font-size-4xs": "0.3125rem",
-    "--font-size-3xs": "0.4375rem",
-    "--font-size-2xs": "0.5rem",
-    "--font-size-xs": "0.625rem",
-    "--font-size-sm": "0.8125rem",
+    "--font-size-4xs": "0.5625rem",
+    "--font-size-3xs": "0.625rem",
+    "--font-size-2xs": "0.6875rem",
+    "--font-size-xs": "0.8125rem",
+    "--font-size-sm": "0.875rem",
     "--font-size-base": "1rem",
-    "--font-size-lg": "1.25rem",
-    "--font-size-xl": "1.5625rem",
-    "--font-size-2xl": "1.9375rem",
-    "--font-size-3xl": "2.4375rem",
-    "--font-size-4xl": "3.0625rem",
-    "--font-size-5xl": "3.8125rem",
+    "--font-size-lg": "1.125rem",
+    "--font-size-xl": "1.25rem",
+    "--font-size-2xl": "1.4375rem",
+    "--font-size-3xl": "1.625rem",
+    "--font-size-4xl": "1.8125rem",
+    "--font-size-5xl": "2rem",
     "--text-heading-1-size": "var(--font-size-2xl)",
     "--text-heading-1-weight": "var(--font-weight-bold)",
-    "--text-heading-1-leading": "1.4194",
+    "--text-heading-1-leading": "1.3913",
     "--text-heading-2-size": "var(--font-size-xl)",
     "--text-heading-2-weight": "var(--font-weight-bold)",
-    "--text-heading-2-leading": "1.44",
+    "--text-heading-2-leading": "1.4",
     "--text-heading-3-size": "var(--font-size-lg)",
     "--text-heading-3-weight": "var(--font-weight-bold)",
-    "--text-heading-3-leading": "1.4",
+    "--text-heading-3-leading": "1.5556",
     "--text-heading-4-size": "var(--font-size-base)",
     "--text-heading-4-weight": "var(--font-weight-bold)",
     "--text-heading-4-leading": "1.5",
     "--text-heading-5-size": "var(--font-size-sm)",
     "--text-heading-5-weight": "var(--font-weight-bold)",
-    "--text-heading-5-leading": "1.5385",
+    "--text-heading-5-leading": "1.4286",
     "--text-heading-6-size": "var(--font-size-xs)",
     "--text-heading-6-weight": "var(--font-weight-bold)",
-    "--text-heading-6-leading": "1.6",
+    "--text-heading-6-leading": "1.5385",
     "--text-body-size": "var(--font-size-base)",
     "--text-body-weight": "var(--font-weight-normal)",
     "--text-body-leading": "1.5",
     "--text-large-size": "var(--font-size-lg)",
     "--text-large-weight": "var(--font-weight-semibold)",
-    "--text-large-leading": "1.4",
+    "--text-large-leading": "1.5556",
     "--text-label-size": "var(--font-size-base)",
     "--text-label-weight": "var(--font-weight-medium)",
     "--text-label-leading": "1.5",
@@ -88,16 +88,16 @@ export const jazzTheme = {
     "--text-code-leading": "1.5",
     "--text-supporting-size": "var(--font-size-sm)",
     "--text-supporting-weight": "var(--font-weight-normal)",
-    "--text-supporting-leading": "1.5385",
+    "--text-supporting-leading": "1.4286",
     "--text-display-1-size": "var(--font-size-5xl)",
     "--text-display-1-weight": "var(--font-weight-normal)",
-    "--text-display-1-leading": "1.2459",
+    "--text-display-1-leading": "1.25",
     "--text-display-2-size": "var(--font-size-4xl)",
     "--text-display-2-weight": "var(--font-weight-normal)",
-    "--text-display-2-leading": "1.2245",
+    "--text-display-2-leading": "1.3793",
     "--text-display-3-size": "var(--font-size-3xl)",
     "--text-display-3-weight": "var(--font-weight-normal)",
-    "--text-display-3-leading": "1.2308",
+    "--text-display-3-leading": "1.3846",
     "--radius-none": "0px",
     "--radius-inner": "6px",
     "--radius-element": "12px",
@@ -166,15 +166,15 @@ export const jazzTheme = {
       },
       "type:display-2": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "clamp(3rem, 7vw, 5.5rem)",
+        "fontSize": "clamp(2.75rem, 5vw, 6rem)",
         "lineHeight": "0.9",
         "fontWeight": "900",
         "letterSpacing": "-0.06em"
       },
       "type:display-3": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "var(--font-size-4xl)",
-        "lineHeight": "1",
+        "fontSize": "2.25rem",
+        "lineHeight": "2.5rem",
         "fontWeight": "900",
         "letterSpacing": "-0.06em"
       },
@@ -227,16 +227,23 @@ export const jazzTheme = {
       },
       "type:eyebrow": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "var(--font-size-xsm)",
+        "fontSize": "0.75rem",
+        "lineHeight": "1rem",
         "fontWeight": "var(--font-weight-semibold)",
         "letterSpacing": "0.18em",
-        "textTransform": "uppercase",
-        "color": "var(--color-text-secondary)"
+        "textTransform": "uppercase"
       }
     },
     "card": {
       "base": {
         "borderRadius": "var(--radius-container)"
+      }
+    },
+    "link": {
+      "base": {
+        "textDecorationLine": "underline",
+        "textDecorationColor": "color-mix(in srgb, var(--color-text-secondary) 60%, transparent)",
+        "textUnderlineOffset": "4px"
       }
     }
   },
@@ -270,7 +277,7 @@ export const jazzTheme = {
     "typography": {
       "scale": {
         "base": 16,
-        "ratio": 1.25
+        "ratio": 1.125
       },
       "body": {
         "family": "body_font",
