@@ -60,11 +60,12 @@ export const jazzTheme = defineTheme({
     // popovers are plain white / near-black, like the homepage's aside.
     '--color-background-body': ['#F5F5F5', '#121212'],
     '--color-background-surface': ['#FFFFFF', '#0A0A0A'],
-    '--color-background-card': ['#FFFFFF', '#0A0A0A'],
+    '--color-background-card': ['#FFFFFF', '#000000'],
     '--color-background-popover': ['#FFFFFF', '#0A0A0A'],
     '--color-text-primary': ['#0A0A0A', '#EBEBEB'],
     // #737373 (the site's muted grey) is 4.35:1 on #F5F5F5; #6B6B6B passes AA.
-    '--color-text-secondary': ['#6B6B6B', '#A3A3A3'],
+    // #939393 is the site's dark muted grey (70% at 0.8 alpha) flattened.
+    '--color-text-secondary': ['#6B6B6B', '#939393'],
     '--color-border': ['#CCCCCC80', '#66666633'],
     '--focus-outline-color': 'var(--color-accent)',
   },
@@ -101,8 +102,9 @@ export const jazzTheme = defineTheme({
         letterSpacing: '-0.06em',
       },
     },
+    // Homepage cards: rounded-2xl, p-4.
     card: {
-      base: {borderRadius: 'var(--radius-container)'},
+      base: {borderRadius: '1rem', padding: '1rem'},
     },
     // Small uppercase section labels ("JAZZ CLOUD", pricing meter names).
     text: {
