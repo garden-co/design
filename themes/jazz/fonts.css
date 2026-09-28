@@ -176,9 +176,16 @@
     U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/*
+ * code_font: its letters are ~1.2x as wide as the body face's (0.62 vs 0.52
+ * em advance) at the same x-height, so code looked a size too large beside
+ * prose. size-adjust 84% brings its letter width in line with body text.
+ */
+
 @font-face {
   font-family: "code_font";
   src: url("../../fonts/jazz/code-font-latin-400-normal.woff2") format("woff2");
+  size-adjust: 84%;
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -190,6 +197,7 @@
 @font-face {
   font-family: "code_font";
   src: url("../../fonts/jazz/code-font-latin-400-italic.woff2") format("woff2");
+  size-adjust: 84%;
   font-style: italic;
   font-weight: 400;
   font-display: swap;
@@ -201,6 +209,7 @@
 @font-face {
   font-family: "code_font";
   src: url("../../fonts/jazz/code-font-latin-700-normal.woff2") format("woff2");
+  size-adjust: 84%;
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -212,6 +221,7 @@
 @font-face {
   font-family: "code_font";
   src: url("../../fonts/jazz/code-font-latin-700-italic.woff2") format("woff2");
+  size-adjust: 84%;
   font-style: italic;
   font-weight: 700;
   font-display: swap;

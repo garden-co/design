@@ -13,6 +13,7 @@
     },
     "./jazz/theme.css": "./dist/jazz/jazz.css",
     "./jazz/tokens.css": "./dist/jazz/tokens.css",
+    "./jazz/components.css": "./themes/jazz/components.css",
     "./jazz/fonts.css": "./themes/jazz/fonts.css",
     "./fonts/*": "./fonts/*",
     "./react": {
@@ -24,6 +25,7 @@
     "dist",
     "fonts",
     "themes/jazz/fonts.css",
+    "themes/jazz/components.css",
     "react"
   ],
   "scripts": {
