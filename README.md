@@ -62,5 +62,8 @@ running build scripts.
 ## Licence
 
 Code and theme sources are MIT (`LICENSE`). **Font files under `fonts/` are
-excluded** and remain under their own licences, listed in
-[`fonts/README.md`](fonts/README.md).
+excluded.** The Jazz faces in `fonts/jazz/` are proprietary and may be used
+only on jazz.tools, garden.co and other Garden Computing products; nothing here
+grants anyone else a licence to them. See [`fonts/README.md`](fonts/README.md).
+Outside Garden Computing, drop `fonts.css` and the theme falls back to system
+fonts.

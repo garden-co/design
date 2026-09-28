@@ -19,3 +19,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Additional notice:
+
+The font files under fonts/ are expressly excluded from the MIT license above.
+The files under fonts/jazz/ are proprietary third-party fonts licensed to
+Garden Computing, Inc. for use only on jazz.tools, garden.co and other Garden
+Computing, Inc. products; no license to use, copy, modify or redistribute them
+is granted by this repository. Other folders under fonts/ carry their own
+license files.
