@@ -43,9 +43,8 @@ export const jazzTheme = defineTheme({
     },
   },
 
-  // Homepage cards are rounded-2xl (16px); a 4px base at 1.5x reaches that
-  // at container level.
-  radius: {base: 4, multiplier: 1.5},
+  // Half of Astryx's default rounding (Anselm, 2026-09-28).
+  radius: {base: 2, multiplier: 1.5},
 
   motion: {fast: 150, medium: 300, slow: 700, ratio: 0.75},
 
@@ -120,8 +119,8 @@ export const jazzTheme = defineTheme({
         ':hover': {borderColor: 'color-mix(in srgb, var(--color-text-secondary) 55%, transparent)'},
       },
     },
-    // Roomier navigation: a 64px top bar with 16px gutters, wider top nav
-    // items, and side nav items inset to line up with the top nav's logo.
+    // Roomier navigation: a 64px top bar with 16px gutters and wider top nav
+    // items.
     'top-nav': {
       base: {paddingBlock: '14px', paddingInline: '16px'},
     },
@@ -131,8 +130,16 @@ export const jazzTheme = defineTheme({
     'side-nav': {
       base: {paddingInline: '12px'},
     },
+    // Sidebar entries in the smaller supporting size so long titles fit. The
+    // label inset matches the section headings' (spacing-2), so headings and
+    // entries share one left edge.
     'side-nav-item': {
-      base: {minHeight: '36px', paddingInline: '12px'},
+      base: {
+        minHeight: '32px',
+        paddingInline: 'var(--spacing-2)',
+        fontSize: 'var(--text-supporting-size)',
+        lineHeight: 'var(--text-supporting-leading)',
+      },
     },
     // Small uppercase section labels ("JAZZ CLOUD", pricing meter names).
     text: {

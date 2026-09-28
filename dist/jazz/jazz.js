@@ -99,11 +99,11 @@ export const jazzTheme = {
     "--text-display-3-weight": "var(--font-weight-normal)",
     "--text-display-3-leading": "1.3846",
     "--radius-none": "0px",
-    "--radius-inner": "6px",
-    "--radius-element": "12px",
-    "--radius-container": "18px",
-    "--radius-page": "42px",
-    "--radius-chat": "42px",
+    "--radius-inner": "3px",
+    "--radius-element": "6px",
+    "--radius-container": "9px",
+    "--radius-page": "21px",
+    "--radius-chat": "21px",
     "--radius-full": "9999px",
     "--duration-fast-min": "115ms",
     "--duration-fast": "150ms",
@@ -266,8 +266,10 @@ export const jazzTheme = {
     },
     "side-nav-item": {
       "base": {
-        "minHeight": "36px",
-        "paddingInline": "12px"
+        "minHeight": "32px",
+        "paddingInline": "var(--spacing-2)",
+        "fontSize": "var(--text-supporting-size)",
+        "lineHeight": "var(--text-supporting-leading)"
       }
     },
     "link": {
@@ -335,7 +337,7 @@ export const jazzTheme = {
       "contrast": "standard"
     },
     "radius": {
-      "base": 4,
+      "base": 2,
       "multiplier": 1.5
     },
     "motion": {
