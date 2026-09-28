@@ -254,23 +254,23 @@
 
   .astryx-heading[data-level="1"] {
     font-family: var(--font-family-heading);
-    font-size: var(--text-heading-1-size);
+    font-size: 2.25rem;
     font-weight: var(--text-heading-1-weight);
-    line-height: var(--text-heading-1-leading);
+    line-height: 2.5rem;
   }
 
   .astryx-heading[data-level="2"] {
     font-family: var(--font-family-heading);
-    font-size: clamp(1.875rem, 4vw, 2.6rem);
-    font-weight: 900;
-    line-height: 0.9;
+    font-size: 1.5rem;
+    font-weight: var(--text-heading-2-weight);
+    line-height: 2rem;
   }
 
   .astryx-heading[data-level="3"] {
     font-family: var(--font-family-heading);
-    font-size: var(--text-heading-3-size);
+    font-size: 1.25rem;
     font-weight: var(--text-heading-3-weight);
-    line-height: var(--text-heading-3-leading);
+    line-height: 1.75rem;
   }
 
   .astryx-heading[data-level="4"] {
@@ -319,8 +319,7 @@
   }
 
   .astryx-heading {
-    letter-spacing: -0.04em;
-    line-height: 0.9;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 

@@ -123,21 +123,21 @@ export const jazzTheme = {
     "heading": {
       "level:1": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "var(--text-heading-1-size)",
+        "fontSize": "2.25rem",
         "fontWeight": "var(--text-heading-1-weight)",
-        "lineHeight": "var(--text-heading-1-leading)"
+        "lineHeight": "2.5rem"
       },
       "level:2": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "clamp(1.875rem, 4vw, 2.6rem)",
-        "fontWeight": "900",
-        "lineHeight": "0.9"
+        "fontSize": "1.5rem",
+        "fontWeight": "var(--text-heading-2-weight)",
+        "lineHeight": "2rem"
       },
       "level:3": {
         "fontFamily": "var(--font-family-heading)",
-        "fontSize": "var(--text-heading-3-size)",
+        "fontSize": "1.25rem",
         "fontWeight": "var(--text-heading-3-weight)",
-        "lineHeight": "var(--text-heading-3-leading)"
+        "lineHeight": "1.75rem"
       },
       "level:4": {
         "fontFamily": "var(--font-family-heading)",
@@ -179,8 +179,7 @@ export const jazzTheme = {
         "letterSpacing": "-0.06em"
       },
       "base": {
-        "letterSpacing": "-0.04em",
-        "lineHeight": "0.9",
+        "letterSpacing": "-0.02em",
         "textWrap": "balance"
       }
     },

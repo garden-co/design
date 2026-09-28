@@ -71,16 +71,18 @@ export const jazzTheme = defineTheme({
   },
 
   components: {
-    // "the database that syncs": heaviest weight, very tight leading and
-    // tracking, balanced wrapping.
     heading: {
-      base: {letterSpacing: '-0.04em', lineHeight: '0.9', textWrap: 'balance'},
-      // Level rules set their own line-height, so repeat the tight leading.
-      'level:2': {
-        fontSize: 'clamp(1.875rem, 4vw, 2.6rem)',
-        fontWeight: '900',
-        lineHeight: '0.9',
-      },
+      // Document headings (docs, dashboard) keep Astryx's level sizes with
+      // the brand face and slightly tight tracking. The homepage's oversized
+      // section headings set their size, weight and leading at the call site.
+      base: {letterSpacing: '-0.02em', textWrap: 'balance'},
+      // Document scale (docs page titles and sections), close to Tailwind's
+      // 4xl / 2xl / xl steps; the 1.125 type ratio alone makes them too small.
+      'level:1': {fontSize: '2.25rem', lineHeight: '2.5rem'},
+      'level:2': {fontSize: '1.5rem', lineHeight: '2rem'},
+      'level:3': {fontSize: '1.25rem', lineHeight: '1.75rem'},
+      // "the database that syncs": heaviest weight, very tight leading and
+      // tracking.
       'type:display-1': {
         fontSize: 'clamp(4rem, 11vw, 10rem)',
         lineHeight: '0.84',
