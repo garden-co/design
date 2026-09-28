@@ -72,8 +72,8 @@ assembled the way the real products assemble them. A settings panel re-themes
 everything live (mode, accent, greys, contrast, type scale and faces, radius,
 pinned colours, component overrides as JSON). Changes stay in your browser;
 **Copy changes** puts a JSON diff against `jazzTheme.ts` on the clipboard to
-paste back into the theme. It loads the proprietary fonts, so only deploy it
-somewhere private to Garden Computing.
+paste back into the theme. `vercel.json` deploys it as a static site
+(served with `noindex`); keep it on its vercel.app domain.
 
 `dist/` is committed on purpose: git dependencies are installed without
 running build scripts.
