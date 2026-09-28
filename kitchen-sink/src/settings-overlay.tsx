@@ -1,6 +1,6 @@
 import {useEffect, useState, type ReactNode} from 'react';
 import {jazzThemeInput} from '../../themes/jazz/jazzTheme';
-import {initialSettings, settingsDiff, useSettings, type Settings} from './settings';
+import {GREY_PRESETS, initialSettings, settingsDiff, TYPE_ROLES, useSettings, type Settings} from './settings';
 
 /*
  * The overlay is plain HTML with its own styles (sink.css), so experiments
@@ -15,6 +15,48 @@ const FONT_CHOICES = [
   {label: 'System UI', value: 'system-ui'},
   {label: 'Serif', value: 'Georgia'},
 ];
+
+// jazzTheme.ts's weights per type role (dist/jazz/tokens.css); the homepage's
+// display headings pin 900 on top of the display roles.
+const DEFAULT_WEIGHTS: Record<string, string> = {
+  'display-1': '400',
+  'display-2': '400',
+  'display-3': '400',
+  'heading-1': '700',
+  'heading-2': '700',
+  'heading-3': '700',
+  'heading-4': '700',
+  large: '600',
+  body: '400',
+  label: '500',
+  supporting: '400',
+  code: '400',
+};
+const WEIGHT_CHOICES = ['300', '400', '500', '600', '700', '800', '900'];
+
+function WeightRow({role}: {role: string}) {
+  const {settings, setSettings} = useSettings();
+  const value = settings.weights[role];
+  const set = (next: string | null) =>
+    setSettings((s) => {
+      const weights = {...s.weights};
+      if (next == null) delete weights[role];
+      else weights[role] = next;
+      return {...s, weights};
+    });
+  return (
+    <Row label={role}>
+      <select value={value ?? DEFAULT_WEIGHTS[role]} onChange={(e) => set(e.target.value)}>
+        {WEIGHT_CHOICES.map((w) => (
+          <option key={w} value={w}>
+            {w}
+          </option>
+        ))}
+      </select>
+      <ResetButton isVisible={value != null} onClick={() => set(null)} />
+    </Row>
+  );
+}
 
 const baseTokens = jazzThemeInput.tokens as Record<string, string | readonly [string, string]>;
 
@@ -199,14 +241,28 @@ export function SettingsOverlay() {
             <ColorField value={settings.accent ?? jazzThemeInput.color.accent} onChange={(v) => set('accent', v)} />
             <ResetButton isVisible={settings.accent != null} onClick={() => set('accent', null)} />
           </Row>
-          <Row label="Neutral greys" hint="generated greys only; pinned tokens below win">
+          <Row label="Grey family" hint="the site's pinned greys, or a Tailwind family in the same roles">
+            <select
+              value={settings.greyPreset ?? 'site'}
+              onChange={(e) => set('greyPreset', e.target.value === 'site' ? null : (e.target.value as Settings['greyPreset']))}
+            >
+              <option value="site">site (Fumadocs neutral)</option>
+              {GREY_PRESETS.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+            <ResetButton isVisible={settings.greyPreset != null} onClick={() => set('greyPreset', null)} />
+          </Row>
+          <Row label="Generated greys" hint="Astryx's own greys, tinted by the accent; replaces the pinned greys">
             <select
               value={settings.neutralStyle ?? jazzThemeInput.color.neutralStyle}
               onChange={(e) => set('neutralStyle', e.target.value as Settings['neutralStyle'])}
             >
-              <option value="neutral">neutral</option>
-              <option value="warm">warm (stone)</option>
-              <option value="cool">cool (slate)</option>
+              <option value="neutral">off (use pinned greys)</option>
+              <option value="cool">cool: light accent tint</option>
+              <option value="warm">warm: stronger accent tint</option>
             </select>
             <ResetButton isVisible={settings.neutralStyle != null} onClick={() => set('neutralStyle', null)} />
           </Row>
@@ -233,7 +289,7 @@ export function SettingsOverlay() {
               onChange={(v) => set('typeBase', v)}
             />
           </Row>
-          <Row label="Scale ratio">
+          <Row label="Scale ratio" hint="body text is the base, so it stays put">
             <NumberKnob
               value={settings.typeRatio}
               fallback={typography.scale.ratio}
@@ -260,6 +316,12 @@ export function SettingsOverlay() {
               </select>
               <ResetButton isVisible={settings[key] != null} onClick={() => set(key, null)} />
             </Row>
+          ))}
+        </Section>
+
+        <Section title="Weights" defaultOpen={false}>
+          {TYPE_ROLES.map((role) => (
+            <WeightRow key={role} role={role} />
           ))}
         </Section>
 

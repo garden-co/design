@@ -1,5 +1,5 @@
 import {createContext, useContext, useEffect, useMemo, useState, type ReactNode} from 'react';
-import {defineTheme, type DefineThemeInput} from '@astryxdesign/core/theme';
+import {defineTheme, expandTypeScale, type DefineThemeInput} from '@astryxdesign/core/theme';
 import {jazzThemeInput} from '../../themes/jazz/jazzTheme';
 
 /**
@@ -10,6 +10,8 @@ export type Settings = {
   mode: 'light' | 'dark' | 'system';
   accent: string | null;
   neutralStyle: 'neutral' | 'warm' | 'cool' | null;
+  /** Replaces the site's pinned greys with a Tailwind grey family. */
+  greyPreset: GreyPreset | null;
   contrast: 'standard' | 'high' | null;
   typeBase: number | null;
   typeRatio: number | null;
@@ -18,6 +20,8 @@ export type Settings = {
   bodyFamily: string | null;
   headingFamily: string | null;
   codeFamily: string | null;
+  /** Type role (`heading-1`, `body`, `display-2`, …) → CSS font-weight. */
+  weights: Record<string, string>;
   /** Token name → [light, dark] (or a single value). */
   tokens: Record<string, string | [string, string]>;
   /** JSON text merged over the theme's `components`. */
@@ -28,6 +32,7 @@ export const initialSettings: Settings = {
   mode: 'system',
   accent: null,
   neutralStyle: null,
+  greyPreset: null,
   contrast: null,
   typeBase: null,
   typeRatio: null,
@@ -36,6 +41,7 @@ export const initialSettings: Settings = {
   bodyFamily: null,
   headingFamily: null,
   codeFamily: null,
+  weights: {},
   tokens: {},
   componentsJson: '',
 };
@@ -86,8 +92,108 @@ function mergeComponents(base: ComponentOverrides, extra: ComponentOverrides): C
 
 const ACCENT_PINS = ['--color-accent', '--color-text-accent', '--color-icon-accent'];
 
-function withoutAccentPins<T extends Record<string, unknown>>(tokens: T): T {
-  return Object.fromEntries(Object.entries(tokens).filter(([k]) => !ACCENT_PINS.includes(k))) as T;
+// The theme pins the site's Fumadocs greys; they step aside when another
+// grey style is picked so the generated greys show.
+const GREY_PINS = [
+  '--color-background-body',
+  '--color-background-surface',
+  '--color-background-card',
+  '--color-background-popover',
+  '--color-text-primary',
+  '--color-text-secondary',
+  '--color-border',
+];
+
+// Tailwind grey families: 100, 300, 400, 600, 900, 950, 200.
+const GREY_FAMILIES = {
+  stone: ['#F5F5F4', '#D6D3D1', '#A8A29E', '#57534E', '#1C1917', '#0C0A09', '#E7E5E4'],
+  zinc: ['#F4F4F5', '#D4D4D8', '#A1A1AA', '#52525B', '#18181B', '#09090B', '#E4E4E7'],
+  slate: ['#F1F5F9', '#CBD5E1', '#94A3B8', '#475569', '#0F172A', '#020617', '#E2E8F0'],
+} as const;
+export type GreyPreset = keyof typeof GREY_FAMILIES;
+export const GREY_PRESETS = Object.keys(GREY_FAMILIES) as GreyPreset[];
+
+/** The site's grey pins, rebuilt from a Tailwind family in the same roles. */
+function greyPresetTokens(preset: GreyPreset | null): Record<string, [string, string]> {
+  if (!preset) return {};
+  const [c100, c300, c400, c600, c900, c950, c200] = GREY_FAMILIES[preset];
+  return {
+    '--color-background-body': [c100, c950],
+    '--color-background-surface': ['#FFFFFF', c950],
+    '--color-background-card': ['#FFFFFF', c900],
+    '--color-background-popover': ['#FFFFFF', c950],
+    '--color-text-primary': [c950, c200],
+    '--color-text-secondary': [c600, c400],
+    '--color-border': [`${c300}80`, '#FFFFFF1F'],
+  };
+}
+
+function withoutPins<T extends Record<string, unknown>>(tokens: T, pins: string[]): T {
+  return Object.fromEntries(Object.entries(tokens).filter(([k]) => !pins.includes(k))) as T;
+}
+
+/** Type roles the overlay offers weights for, with the scale step each size follows. */
+export const TYPE_ROLES = [
+  'display-1',
+  'display-2',
+  'display-3',
+  'heading-1',
+  'heading-2',
+  'heading-3',
+  'heading-4',
+  'large',
+  'body',
+  'label',
+  'supporting',
+  'code',
+] as const;
+
+function remOf(tokens: Record<string, string>, name: string): number {
+  let v = tokens[name];
+  for (let i = 0; i < 4 && v?.startsWith('var('); i++) v = tokens[v.slice(4, -1)];
+  return v ? parseFloat(v) : 1;
+}
+
+/**
+ * The theme pins some sizes (document headings, homepage display lines,
+ * eyebrows) in rem. So the scale sliders move them too, each pin is scaled
+ * by how much its scale step moved from jazzTheme.ts's scale.
+ */
+function scaledPins(
+  components: NonNullable<DefineThemeInput['components']>,
+  from: {base: number; ratio: number},
+  to: {base: number; ratio: number},
+) {
+  if (from.base === to.base && from.ratio === to.ratio) return components;
+  const a = expandTypeScale(from);
+  const b = expandTypeScale(to);
+  const factor = (token: string) => remOf(b, token) / remOf(a, token);
+  const scale = (style: Record<string, unknown> | undefined, token: string) => {
+    if (!style) return style;
+    const k = factor(token).toFixed(4);
+    const out = {...style};
+    for (const prop of ['fontSize', 'lineHeight']) {
+      const v = out[prop];
+      if (typeof v === 'string' && /rem|px|vw|clamp/.test(v)) out[prop] = `calc(${v} * ${k})`;
+    }
+    return out;
+  };
+  const heading = {...(components.heading as Record<string, Record<string, unknown>>)};
+  for (const n of [1, 2, 3]) heading[`level:${n}`] = scale(heading[`level:${n}`], `--text-heading-${n}-size`)!;
+  for (const n of [1, 2, 3]) heading[`type:display-${n}`] = scale(heading[`type:display-${n}`], `--text-display-${n}-size`)!;
+  const text = {...(components.text as Record<string, Record<string, unknown>>)};
+  text['type:eyebrow'] = scale(text['type:eyebrow'], '--font-size-xs')!;
+  return {...components, heading, text} as typeof components;
+}
+
+/** Weight pins in components (the homepage display lines) follow the overlay too. */
+function withWeights(components: NonNullable<DefineThemeInput['components']>, weights: Record<string, string>) {
+  const heading = {...(components.heading as Record<string, Record<string, unknown>>)};
+  for (const n of [1, 2, 3]) {
+    const w = weights[`display-${n}`];
+    if (w && heading[`type:display-${n}`]) heading[`type:display-${n}`] = {...heading[`type:display-${n}`], fontWeight: w};
+  }
+  return {...components, heading} as typeof components;
 }
 
 /** The theme input with the overlay's changes applied. */
@@ -120,12 +226,27 @@ export function applySettings(s: Settings): {input: DefineThemeInput; components
       ...(s.radiusMultiplier != null ? {multiplier: s.radiusMultiplier} : {}),
     },
     tokens: {
-      // A changed accent re-derives the accent family, so the logo-blue pins
-      // step aside unless they were edited directly.
-      ...(s.accent ? withoutAccentPins(base.tokens ?? {}) : base.tokens),
+      // A changed accent re-derives the accent family, and a changed grey
+      // style the greys, so those pins step aside unless edited directly.
+      ...withoutPins(base.tokens ?? {}, [
+        ...(s.accent ? ACCENT_PINS : []),
+        ...(s.neutralStyle && s.neutralStyle !== base.color?.neutralStyle ? GREY_PINS : []),
+      ]),
+      ...greyPresetTokens(s.greyPreset),
+      ...Object.fromEntries(Object.entries(s.weights).map(([role, w]) => [`--text-${role}-weight`, w])),
       ...s.tokens,
     },
-    components: extraComponents ? mergeComponents(base.components ?? {}, extraComponents) : base.components,
+    components: (() => {
+      let components = withWeights(
+        scaledPins(base.components ?? {}, typography.scale!, {
+          base: s.typeBase ?? typography.scale!.base,
+          ratio: s.typeRatio ?? typography.scale!.ratio,
+        }),
+        s.weights,
+      );
+      if (extraComponents) components = mergeComponents(components, extraComponents);
+      return components;
+    })(),
   };
   return {input, componentsError: error};
 }
@@ -155,9 +276,24 @@ export function settingsDiff(s: Settings): Record<string, unknown> {
     ...(s.radiusMultiplier != null ? {multiplier: s.radiusMultiplier} : {}),
   };
   if (Object.keys(radius).length) diff.radius = radius;
-  if (Object.keys(s.tokens).length) diff.tokens = s.tokens;
-  const {value} = parseComponents(s.componentsJson);
-  if (value) diff.components = value;
+  const tokens = {
+    ...greyPresetTokens(s.greyPreset),
+    ...Object.fromEntries(Object.entries(s.weights).map(([role, w]) => [`--text-${role}-weight`, w])),
+    ...s.tokens,
+  };
+  if (Object.keys(tokens).length) diff.tokens = tokens;
+  // Every component variant that ends up different: JSON overrides, plus
+  // pinned sizes and weights the scale and weight controls moved.
+  const before = (jazzThemeInput as DefineThemeInput).components ?? {};
+  const after = applySettings(s).input.components ?? {};
+  const components: Record<string, Record<string, unknown>> = {};
+  for (const [name, variants] of Object.entries(after as Record<string, Record<string, unknown>>)) {
+    for (const [key, style] of Object.entries(variants)) {
+      const prev = (before as Record<string, Record<string, unknown>>)[name]?.[key];
+      if (JSON.stringify(prev) !== JSON.stringify(style)) (components[name] ??= {})[key] = style;
+    }
+  }
+  if (Object.keys(components).length) diff.components = components;
   return diff;
 }
 
