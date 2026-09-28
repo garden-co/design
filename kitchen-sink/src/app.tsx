@@ -5,8 +5,10 @@ import {SettingsProvider, useSettings} from './settings';
 import {OverviewPage} from './pages/overview';
 import {DocsContextPage} from './pages/docs-context';
 import {DashboardContextPage} from './pages/dashboard-context';
+import {PrinciplesPage} from './pages/principles';
 
 export const PAGES = [
+  {id: 'principles', label: 'Principles', render: () => <PrinciplesPage />},
   {id: 'overview', label: 'Components', render: () => <OverviewPage />},
   {id: 'docs', label: 'In context: docs', render: () => <DocsContextPage />},
   {id: 'dashboard', label: 'In context: dashboard', render: () => <DashboardContextPage />},

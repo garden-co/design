@@ -24,13 +24,14 @@ const LOGO_BLUE_ON_DARK = '#3D84FF';
 export const jazzThemeInput = {
   name: 'jazz',
 
-  // Greys stay neutral to match the homepage's Fumadocs neutral palette.
+  // Greys are pinned below (Tailwind stone); the generated neutrals only
+  // fill the tokens that aren't pinned.
   color: {accent: LOGO_BLUE, neutralStyle: 'neutral', contrast: 'standard'},
 
   typography: {
-    // 16px body; 1.125 keeps the small steps near the site's Tailwind sizes
-    // (sm ≈ 14px, lg = 18px, xl ≈ 20px).
-    scale: {base: 16, ratio: 1.125},
+    // 16px body with a pronounced 1.275 ratio (sm = 13px, lg = 20px,
+    // xl = 26px), picked in the kitchen sink (Anselm, 2026-09-28).
+    scale: {base: 16, ratio: 1.275},
     body: {
       family: 'body_font',
       fallbacks: 'ui-sans-serif, system-ui, sans-serif',
@@ -58,21 +59,25 @@ export const jazzThemeInput = {
     '--color-on-accent': ['#FFFFFF', '#FFFFFF'],
     '--color-text-accent': [LOGO_BLUE_TEXT_ON_LIGHT, LOGO_BLUE_ON_DARK],
     '--color-icon-accent': [LOGO_BLUE_TEXT_ON_LIGHT, LOGO_BLUE_ON_DARK],
-    // The live site's page, text and border colours (Fumadocs neutral), so
-    // Astryx regions sit seamlessly inside jazz.tools and its docs. Cards and
-    // popovers are plain white / near-black, like the homepage's aside.
-    '--color-background-body': ['#F5F5F5', '#121212'],
-    '--color-background-surface': ['#FFFFFF', '#0A0A0A'],
+    // Page, text and border colours from Tailwind's stone greys, in the
+    // roles the site's Fumadocs greys had (Anselm, 2026-09-28). Cards and
+    // popovers are plain white in light mode.
+    '--color-background-body': ['#F5F5F4', '#0C0A09'],
+    '--color-background-surface': ['#FFFFFF', '#0C0A09'],
     // Dark cards sit one step above the surface (not below it), so a card
     // reads as a raised object rather than a hole in the page.
-    '--color-background-card': ['#FFFFFF', '#171717'],
-    '--color-background-popover': ['#FFFFFF', '#0A0A0A'],
-    '--color-text-primary': ['#0A0A0A', '#EBEBEB'],
-    // #737373 (the site's muted grey) is 4.35:1 on #F5F5F5; #6B6B6B passes AA.
-    // #939393 is the site's dark muted grey (70% at 0.8 alpha) flattened.
-    '--color-text-secondary': ['#6B6B6B', '#939393'],
-    // Dark borders at 12% white stay visible on both #0A0A0A and #171717.
-    '--color-border': ['#CCCCCC80', '#FFFFFF1F'],
+    '--color-background-card': ['#FFFFFF', '#1C1917'],
+    '--color-background-popover': ['#FFFFFF', '#0C0A09'],
+    '--color-text-primary': ['#0C0A09', '#E7E5E4'],
+    // stone-600 / stone-400: 7.1:1 on #F5F5F4 and 7.9:1 on #0C0A09.
+    '--color-text-secondary': ['#57534E', '#A8A29E'],
+    // Dark borders at 12% white stay visible on both #0C0A09 and #1C1917.
+    '--color-border': ['#D6D3D180', '#FFFFFF1F'],
+    // Display types are the heaviest weight everywhere, not only in the
+    // homepage headings that pin it.
+    '--text-display-1-weight': '900',
+    '--text-display-2-weight': '900',
+    '--text-display-3-weight': '900',
     '--focus-outline-color': 'var(--color-accent)',
   },
 
@@ -82,11 +87,11 @@ export const jazzThemeInput = {
       // the brand face and slightly tight tracking. The homepage's oversized
       // section headings set their size, weight and leading at the call site.
       base: {letterSpacing: '-0.02em', textWrap: 'balance'},
-      // Document scale (docs page titles and sections), close to Tailwind's
-      // 4xl / 2xl / xl steps; the 1.125 type ratio alone makes them too small.
-      'level:1': {fontSize: '2.25rem', lineHeight: '2.5rem'},
-      'level:2': {fontSize: '1.5rem', lineHeight: '2rem'},
-      'level:3': {fontSize: '1.25rem', lineHeight: '1.75rem'},
+      // Document scale (docs page titles and sections): about 52 / 31 /
+      // 22px, dialled in the kitchen sink (Anselm, 2026-09-28).
+      'level:1': {fontSize: '3.2283rem', lineHeight: '3.587rem'},
+      'level:2': {fontSize: '1.95rem', lineHeight: '2.6rem'},
+      'level:3': {fontSize: '1.3889rem', lineHeight: '1.9444rem'},
       // "the database that syncs": heaviest weight, very tight leading and
       // tracking.
       'type:display-1': {
@@ -143,19 +148,6 @@ export const jazzThemeInput = {
         paddingInline: 'var(--spacing-2)',
         fontSize: 'var(--text-supporting-size)',
         lineHeight: 'var(--text-supporting-leading)',
-      },
-    },
-    // Small uppercase section labels ("JAZZ CLOUD", pricing meter names).
-    text: {
-      // Colour comes from the component's `color` prop (the Eyebrow helper
-      // passes "secondary"); a colour here would lose to data-color rules.
-      'type:eyebrow': {
-        fontFamily: 'var(--font-family-heading)',
-        fontSize: '0.75rem',
-        lineHeight: '1rem',
-        fontWeight: 'var(--font-weight-semibold)',
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
       },
     },
     // Inline links stay underlined so they never rely on colour alone

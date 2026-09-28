@@ -115,6 +115,18 @@ body {
   }
 }
 
+/* Principles */
+.ks-principles {
+  padding: 48px 24px 160px;
+}
+.ks-principles .ks-docs-body {
+  gap: 12px;
+  margin: 0 auto;
+}
+.ks-principles .ks-docs-body > h2 {
+  margin-top: 2rem;
+}
+
 /* Docs context: the docs site's article rhythm (garden-co/jazz docs/app/global.css). */
 .ks-docs-body {
   display: flex;

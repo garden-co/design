@@ -1,0 +1,75 @@
+# Jazz design principles
+
+How Jazz surfaces (jazz.tools, the docs, the Cloud dashboard, examples) should look and behave. This page is for people and coding agents. Every rule here is meant to be checkable by looking at the result. When a rule and a screenshot disagree, the rule wins until someone changes this page.
+
+The theme source is [`themes/jazz/jazzTheme.ts`](https://github.com/garden-co/design/blob/main/themes/jazz/jazzTheme.ts). The live component reference, with a settings panel for trying changes, is the [kitchen sink](https://jazz-design-kitchen-sink.vercel.app) (`pnpm sink` in this repo). This page grows with every design review. When feedback repeats, add a rule here, change the theme, or add a check.
+
+## Scope
+
+- These rules apply to React surfaces built on [Astryx](https://astryx.atmeta.com) with the Jazz theme, and to non-React code that uses `@garden-co/design/jazz/tokens.css`.
+- Garden Computing products only. The Jazz fonts are licensed for jazz.tools, garden.co and other Garden Computing products. Never load `fonts.css` anywhere else, and keep pages that load it off search engines (`noindex`). Never name the font vendor or the font families in code, commits or public text.
+
+## Build with Astryx, customise through the theme
+
+- Use an Astryx component whenever one fits: `Button`, `Card`, `ClickableCard`, `Table`, `TabList`, `Banner`, `SideNav`, `TopNav`, `Layout` and the rest. Look them up in the kitchen sink before building anything.
+- Don't restyle one call site. If a component looks wrong everywhere, change it in `jazzTheme.ts` (`components`), or in `themes/jazz/components.css` for inner parts that `defineTheme` can't reach.
+- Colours, spacing, radii and type come from tokens (`var(--color-…)`, `var(--spacing-…)`, `var(--radius-…)`, `var(--text-…)`). Never write a hex value, a px radius or a font size in product code.
+- Layout primitives (`VStack`, `HStack`, `Grid`, `Layout`) set spacing. Don't add margins to separate siblings.
+
+## Colour
+
+- Greys are Tailwind stone, pinned in the theme: page `#F5F5F4` / `#0C0A09`, surfaces and popovers white / `#0C0A09`, cards white / `#1C1917`.
+- In dark mode, cards are lighter than the surface they sit on, never darker.
+- The accent is the logo blue `#146AFF`. Use it for primary actions, the selected state and focus rings. Don't use it for decoration or large fills.
+- Accent-coloured text and icons use `--color-text-accent` / `--color-icon-accent`, which are one step darker in light mode and one step lighter in dark mode, so they pass AA.
+- All text meets WCAG AA contrast (4.5:1 for body text, 3:1 for large text) in both modes. Secondary text is `--color-text-secondary`, never a lighter ad-hoc grey.
+- Status uses `Banner` / `Badge` / `StatusDot` variants (`success`, `warning`, `error`, `info`). Colour is never the only signal: pair it with a label or an icon.
+
+## Type
+
+- Body text is 16px with a 1.275 scale ratio. Headings use the brand heading face; body and UI use the body face; code uses the code face, sized to match the body's letter size.
+- Document headings: level 1 is the page title (one per page), level 2 is a section and level 3 a subsection. Don't skip levels for size; pick the level by structure.
+- Display types (`display-1` to `display-3`) are 900 weight and reserved for marketing pages and big numbers. Never use them in docs or the dashboard.
+- There are no eyebrows (small uppercase labels above headings). Let the heading say it. Where a value needs a name, as on a pricing meter, use a normal-case label in `supporting` or `label` type.
+- Sentence case everywhere: headings, buttons, tabs, menu items and table headers.
+- Inline links are underlined, so they don't rely on colour alone.
+
+## Shape and density
+
+- Rounding is half of Astryx's default: 3px for inner parts, 6px for controls and 9px for containers. Don't override radii per component.
+- Controls on one row share a height. The top-bar search field is as tall as the nav buttons (36px).
+- Tables use `density="compact"` in the dashboard and docs. A table never scrolls vertically inside the page. It scrolls horizontally only when its columns can't fit.
+
+## Layout and scrolling
+
+- One scroll container per viewport region: the page, or a side panel. Never nest a vertical scroller inside another.
+- Every element can be reached on a 375px-wide phone, by scrolling the page or by a visible toggle. Nothing sits behind a fixed or sticky element with no way to scroll it into view.
+- Fixed and sticky elements (top bar, bottom actions, overlays) reserve their space, with padding or `scroll-margin`, so content never ends up underneath them.
+- Dialogs and popovers fit the viewport. On small screens they become full-width, and their bodies scroll internally.
+- Anchored headings clear the sticky top bar when you jump to them.
+
+## Components in context
+
+- A clickable card's whole card is the link target. It strengthens its border on hover, and holds a title plus at most one line of description.
+- Previous/next links sit at the end of an article, as two clickable cards.
+- Keyboard hints use `Kbd` (flat keycaps, no bottom border).
+- The side nav shows section titles in regular weight, muted, aligned with the item text. Nested items indent by one small step (12px).
+
+## Anti-patterns
+
+These are recurring generated-design habits. Don't:
+
+- Wrap every section in a card, or nest cards inside cards.
+- Add gradient text, glows, drop shadows on flat surfaces, or decorative blobs.
+- Put an icon in front of every heading or list item.
+- Use emoji as UI.
+- Write "Welcome to…", "Get started with…", or other filler headings and hero text.
+- Put a coloured stripe on the left edge of callouts or cards.
+- Make everything bold or everything muted. Emphasis only works when it's rare.
+- Invent a new component for something Astryx already has.
+
+## Changing this page
+
+- Add a rule when a piece of feedback comes up a second time. Write it as something a reviewer can check on a screenshot ("controls on one row share a height"), not as a feeling ("less cramped").
+- If a rule can be enforced in the theme or by a check, do that too, and keep the rule here as the explanation.
+- Keep the kitchen sink showing what each rule describes.

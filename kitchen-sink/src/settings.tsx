@@ -106,7 +106,7 @@ const GREY_PINS = [
 
 // Tailwind grey families: 100, 300, 400, 600, 900, 950, 200.
 const GREY_FAMILIES = {
-  stone: ['#F5F5F4', '#D6D3D1', '#A8A29E', '#57534E', '#1C1917', '#0C0A09', '#E7E5E4'],
+  neutral: ['#F5F5F5', '#D4D4D4', '#A3A3A3', '#525252', '#171717', '#0A0A0A', '#E5E5E5'],
   zinc: ['#F4F4F5', '#D4D4D8', '#A1A1AA', '#52525B', '#18181B', '#09090B', '#E4E4E7'],
   slate: ['#F1F5F9', '#CBD5E1', '#94A3B8', '#475569', '#0F172A', '#020617', '#E2E8F0'],
 } as const;
@@ -155,9 +155,10 @@ function remOf(tokens: Record<string, string>, name: string): number {
 }
 
 /**
- * The theme pins some sizes (document headings, homepage display lines,
- * eyebrows) in rem. So the scale sliders move them too, each pin is scaled
- * by how much its scale step moved from jazzTheme.ts's scale.
+ * The theme pins the document heading sizes in rem. So the scale sliders
+ * move them too, each pin is scaled by how much its scale step moved from
+ * jazzTheme.ts's scale. The homepage's display headings keep their own
+ * viewport-based sizes.
  */
 function scaledPins(
   components: NonNullable<DefineThemeInput['components']>,
@@ -180,10 +181,7 @@ function scaledPins(
   };
   const heading = {...(components.heading as Record<string, Record<string, unknown>>)};
   for (const n of [1, 2, 3]) heading[`level:${n}`] = scale(heading[`level:${n}`], `--text-heading-${n}-size`)!;
-  for (const n of [1, 2, 3]) heading[`type:display-${n}`] = scale(heading[`type:display-${n}`], `--text-display-${n}-size`)!;
-  const text = {...(components.text as Record<string, Record<string, unknown>>)};
-  text['type:eyebrow'] = scale(text['type:eyebrow'], '--font-size-xs')!;
-  return {...components, heading, text} as typeof components;
+  return {...components, heading} as typeof components;
 }
 
 /** Weight pins in components (the homepage display lines) follow the overlay too. */

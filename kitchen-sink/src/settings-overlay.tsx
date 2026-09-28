@@ -16,12 +16,11 @@ const FONT_CHOICES = [
   {label: 'Serif', value: 'Georgia'},
 ];
 
-// jazzTheme.ts's weights per type role (dist/jazz/tokens.css); the homepage's
-// display headings pin 900 on top of the display roles.
+// jazzTheme.ts's weights per type role (dist/jazz/tokens.css).
 const DEFAULT_WEIGHTS: Record<string, string> = {
-  'display-1': '400',
-  'display-2': '400',
-  'display-3': '400',
+  'display-1': '900',
+  'display-2': '900',
+  'display-3': '900',
   'heading-1': '700',
   'heading-2': '700',
   'heading-3': '700',
@@ -241,12 +240,12 @@ export function SettingsOverlay() {
             <ColorField value={settings.accent ?? jazzThemeInput.color.accent} onChange={(v) => set('accent', v)} />
             <ResetButton isVisible={settings.accent != null} onClick={() => set('accent', null)} />
           </Row>
-          <Row label="Grey family" hint="the site's pinned greys, or a Tailwind family in the same roles">
+          <Row label="Grey family" hint="the theme's pinned greys, or another Tailwind family in the same roles">
             <select
               value={settings.greyPreset ?? 'site'}
               onChange={(e) => set('greyPreset', e.target.value === 'site' ? null : (e.target.value as Settings['greyPreset']))}
             >
-              <option value="site">site (Fumadocs neutral)</option>
+              <option value="site">theme (stone)</option>
               {GREY_PRESETS.map((g) => (
                 <option key={g} value={g}>
                   {g}

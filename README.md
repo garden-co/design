@@ -12,8 +12,11 @@ from the jazz.tools homepage.
 | `dist/jazz/jazz.{js,css}` | Built Astryx theme for React apps (`<Theme theme={…}>`)  |
 | `dist/jazz/tokens.css`    | Every token resolved on `:root`, for non-React code       |
 | `themes/jazz/fonts.css`   | `@font-face` rules for the families the theme names       |
-| `react/`                  | Small React helpers for theme-only variants (`Eyebrow`)   |
 | `fonts/`                  | Font files, each under its **own** licence (see below)    |
+
+Design rules for people and agents live in [`principles.mdx`](principles.mdx),
+also rendered in the kitchen sink and served raw at
+`https://jazz-design-kitchen-sink.vercel.app/principles.mdx`.
 
 ## Install
 
