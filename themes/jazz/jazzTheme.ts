@@ -107,12 +107,14 @@ export const jazzThemeInput = {
         lineHeight: '0.9',
         letterSpacing: '-0.06em',
       },
-      // Big figures such as pricing meters.
+      // Homepage section headings and big figures such as pricing meters.
+      // Slightly looser than display-1/2, which run larger (Anselm,
+      // 2026-09-29).
       'type:display-3': {
         fontSize: '2.25rem',
         fontWeight: '900',
         lineHeight: '2.5rem',
-        letterSpacing: '-0.06em',
+        letterSpacing: '-0.04em',
       },
     },
     // Homepage cards: rounded-2xl, p-4.

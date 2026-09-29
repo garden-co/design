@@ -15,13 +15,15 @@
     "./jazz/tokens.css": "./dist/jazz/tokens.css",
     "./jazz/components.css": "./themes/jazz/components.css",
     "./jazz/fonts.css": "./themes/jazz/fonts.css",
+    "./jazz/palette.css": "./themes/jazz/palette.css",
     "./fonts/*": "./fonts/*"
   },
   "files": [
     "dist",
     "fonts",
     "themes/jazz/fonts.css",
-    "themes/jazz/components.css"
+    "themes/jazz/components.css",
+    "themes/jazz/palette.css"
   ],
   "scripts": {
     "build": "tsx scripts/build.mjs",
