@@ -14,12 +14,12 @@
   border-bottom-width: 0 !important;
 }
 
-/* Side nav section headings: regular weight, one step quieter than the
-   entries. #767676 / #7F7F7F keep AA contrast (4.5:1) on the surface. */
+/* Side nav section headings: regular weight in the secondary text colour,
+   which keeps AA contrast on the page, surface and card greys. */
 .astryx-side-nav-section > div:first-child,
 .astryx-side-nav-section > div:first-child * {
   font-weight: var(--font-weight-normal) !important;
-  color: light-dark(#767676, #7f7f7f) !important;
+  color: var(--color-text-secondary) !important;
 }
 
 /* Nested side nav entries indent 12px instead of 24px, so long titles fit. */
