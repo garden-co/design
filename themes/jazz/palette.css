@@ -5,20 +5,23 @@
  *   blue  = local: on a device, instantly visible, mergeable
  *   green = global: the core, authoritative, exclusive
  *
- * Text colours pass WCAG AA on the page background in both modes. The tints
- * are for fills behind blue or green text. The stipple, paper, periwinkle
+ * Blue is the logo blue (#146AFF), the same as the UI accent; dark mode uses
+ * the theme's lighter logo-blue step (#3D84FF). Text colours pass WCAG AA on
+ * card backgrounds in both modes. The tints are for area fills, such as a
+ * highlighted box; put small blue text on the card background, not on the
+ * blue tint (3.9:1 in light mode). The stipple, paper, periwinkle
  * and rose colours are for illustrations and patterns, never for text.
  *
  *   import "@garden-co/design/jazz/palette.css";
  *
- * The UI accent stays `--color-accent` (logo blue); use these for brand
- * illustration, not for buttons or links.
+ * Use these for brand illustration, not for buttons or links; those use
+ * `--color-accent`.
  */
 
 :root {
-  --color-jazz-blue: light-dark(#0b2deb, #8c99ff);
+  --color-jazz-blue: light-dark(#146aff, #3d84ff);
   --color-jazz-green: light-dark(#2e7d4f, #6cc795);
-  --color-jazz-blue-tint: light-dark(#dee4fc, #171c45);
+  --color-jazz-blue-tint: light-dark(#e3edff, #0f2242);
   --color-jazz-green-tint: light-dark(#e4f0ea, #13281c);
 
   --color-jazz-stipple-blue: #484e84;
