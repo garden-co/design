@@ -149,65 +149,65 @@
     --color-accent-muted: light-dark(color-mix(in srgb, var(--color-accent) 20%, transparent), color-mix(in srgb, var(--color-accent) 25%, transparent));
     --color-on-accent: light-dark(#FFFFFF, #FFFFFF);
     --color-neutral: light-dark(#1B1B1F1A, #E2E2E833);
-    --color-background-surface: light-dark(#FFFFFF, #0A0A0A);
-    --color-background-body: light-dark(#F5F5F5, #121212);
+    --color-background-surface: light-dark(#FFFFFF, #0C0A09);
+    --color-background-body: light-dark(#F5F5F4, #0C0A09);
     --color-overlay: light-dark(#1B1B1F66, #1B1B1F99);
     --color-overlay-hover: light-dark(#1B1B1F0D, #FFFFFF0D);
     --color-overlay-pressed: light-dark(#1B1B1F1A, #FFFFFF1A);
     --color-background-muted: light-dark(#1B1B1F0D, #1B1B1F80);
-    --color-text-primary: light-dark(#0A0A0A, #EBEBEB);
-    --color-text-secondary: light-dark(#6B6B6B, #939393);
+    --color-text-primary: light-dark(#0C0A09, #E7E5E4);
+    --color-text-secondary: light-dark(#57534E, #A8A29E);
     --color-text-disabled: light-dark(#90909A, #5E5D67);
     --color-text-accent: light-dark(#1263F0, #3D84FF);
     --color-icon-accent: light-dark(#1263F0, #3D84FF);
     --color-icon-primary: light-dark(#1B1B1F, #E2E2E8);
     --color-icon-secondary: light-dark(#46464F, #ABAAB5);
     --color-icon-disabled: light-dark(#90909A, #5E5D67);
-    --color-background-card: light-dark(#FFFFFF, #000000);
-    --color-background-popover: light-dark(#FFFFFF, #0A0A0A);
+    --color-background-card: light-dark(#FFFFFF, #1C1917);
+    --color-background-popover: light-dark(#FFFFFF, #0C0A09);
     --color-background-inverted: light-dark(#1B1B1F, #FCFCFF);
-    --color-border: light-dark(#CCCCCC80, #66666633);
+    --color-border: light-dark(#D6D3D180, #FFFFFF1F);
     --color-border-emphasized: light-dark(#90909A, #686771);
     --color-skeleton: light-dark(#ABAAB5, #46464F);
     --color-track: light-dark(#ABAAB5, #46464F);
     --color-shadow: light-dark(#0000001A, #0000004D);
     --color-tint-hover: light-dark(black, white);
-    --font-size-4xs: 0.5625rem;
-    --font-size-3xs: 0.625rem;
-    --font-size-2xs: 0.6875rem;
-    --font-size-xs: 0.8125rem;
-    --font-size-sm: 0.875rem;
+    --font-size-4xs: 0.3125rem;
+    --font-size-3xs: 0.375rem;
+    --font-size-2xs: 0.5rem;
+    --font-size-xs: 0.625rem;
+    --font-size-sm: 0.8125rem;
     --font-size-base: 1rem;
-    --font-size-lg: 1.125rem;
-    --font-size-xl: 1.25rem;
-    --font-size-2xl: 1.4375rem;
-    --font-size-3xl: 1.625rem;
-    --font-size-4xl: 1.8125rem;
-    --font-size-5xl: 2rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.625rem;
+    --font-size-2xl: 2.0625rem;
+    --font-size-3xl: 2.625rem;
+    --font-size-4xl: 3.375rem;
+    --font-size-5xl: 4.3125rem;
     --text-heading-1-size: var(--font-size-2xl);
     --text-heading-1-weight: var(--font-weight-bold);
-    --text-heading-1-leading: 1.3913;
+    --text-heading-1-leading: 1.2121;
     --text-heading-2-size: var(--font-size-xl);
     --text-heading-2-weight: var(--font-weight-bold);
-    --text-heading-2-leading: 1.4;
+    --text-heading-2-leading: 1.3846;
     --text-heading-3-size: var(--font-size-lg);
     --text-heading-3-weight: var(--font-weight-bold);
-    --text-heading-3-leading: 1.5556;
+    --text-heading-3-leading: 1.4;
     --text-heading-4-size: var(--font-size-base);
     --text-heading-4-weight: var(--font-weight-bold);
     --text-heading-4-leading: 1.5;
     --text-heading-5-size: var(--font-size-sm);
     --text-heading-5-weight: var(--font-weight-bold);
-    --text-heading-5-leading: 1.4286;
+    --text-heading-5-leading: 1.5385;
     --text-heading-6-size: var(--font-size-xs);
     --text-heading-6-weight: var(--font-weight-bold);
-    --text-heading-6-leading: 1.5385;
+    --text-heading-6-leading: 1.6;
     --text-body-size: var(--font-size-base);
     --text-body-weight: var(--font-weight-normal);
     --text-body-leading: 1.5;
     --text-large-size: var(--font-size-lg);
     --text-large-weight: var(--font-weight-semibold);
-    --text-large-leading: 1.5556;
+    --text-large-leading: 1.4;
     --text-label-size: var(--font-size-base);
     --text-label-weight: var(--font-weight-medium);
     --text-label-leading: 1.5;
@@ -216,22 +216,22 @@
     --text-code-leading: 1.5;
     --text-supporting-size: var(--font-size-sm);
     --text-supporting-weight: var(--font-weight-normal);
-    --text-supporting-leading: 1.4286;
+    --text-supporting-leading: 1.5385;
     --text-display-1-size: var(--font-size-5xl);
-    --text-display-1-weight: var(--font-weight-normal);
-    --text-display-1-leading: 1.25;
+    --text-display-1-weight: 900;
+    --text-display-1-leading: 1.2754;
     --text-display-2-size: var(--font-size-4xl);
-    --text-display-2-weight: var(--font-weight-normal);
-    --text-display-2-leading: 1.3793;
+    --text-display-2-weight: 900;
+    --text-display-2-leading: 1.2593;
     --text-display-3-size: var(--font-size-3xl);
-    --text-display-3-weight: var(--font-weight-normal);
-    --text-display-3-leading: 1.3846;
+    --text-display-3-weight: 900;
+    --text-display-3-leading: 1.2381;
     --radius-none: 0px;
-    --radius-inner: 6px;
-    --radius-element: 12px;
-    --radius-container: 18px;
-    --radius-page: 42px;
-    --radius-chat: 42px;
+    --radius-inner: 3px;
+    --radius-element: 6px;
+    --radius-container: 9px;
+    --radius-page: 21px;
+    --radius-chat: 21px;
     --radius-full: 9999px;
     --duration-fast-min: 115ms;
     --duration-fast: 150ms;
@@ -254,23 +254,23 @@
 
   .astryx-heading[data-level="1"] {
     font-family: var(--font-family-heading);
-    font-size: var(--text-heading-1-size);
+    font-size: 3.2283rem;
     font-weight: var(--text-heading-1-weight);
-    line-height: var(--text-heading-1-leading);
+    line-height: 3.587rem;
   }
 
   .astryx-heading[data-level="2"] {
     font-family: var(--font-family-heading);
-    font-size: clamp(1.875rem, 4vw, 2.6rem);
-    font-weight: 900;
-    line-height: 0.9;
+    font-size: 1.95rem;
+    font-weight: var(--text-heading-2-weight);
+    line-height: 2.6rem;
   }
 
   .astryx-heading[data-level="3"] {
     font-family: var(--font-family-heading);
-    font-size: var(--text-heading-3-size);
+    font-size: 1.3889rem;
     font-weight: var(--text-heading-3-weight);
-    line-height: var(--text-heading-3-leading);
+    line-height: 1.9444rem;
   }
 
   .astryx-heading[data-level="4"] {
@@ -319,8 +319,7 @@
   }
 
   .astryx-heading {
-    letter-spacing: -0.04em;
-    line-height: 0.9;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
@@ -372,19 +371,39 @@
     line-height: var(--text-display-3-leading);
   }
 
-  .astryx-text[data-type="eyebrow"] {
-    font-family: var(--font-family-heading);
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
   .astryx-card {
     border-radius: 1rem;
     --astryx-card-padding: 1rem;
     --_card-radius: 1rem;
+  }
+
+  .astryx-clickable-card {
+    transition-property: border-color, background-color;
+    transition-duration: var(--duration-fast);
+  }
+
+  .astryx-clickable-card:hover:where(:not(:disabled,[aria-disabled="true"])) {
+    border-color: color-mix(in srgb, var(--color-text-secondary) 55%, transparent);
+  }
+
+  .astryx-top-nav {
+    padding-block: 14px;
+    padding-inline: 16px;
+  }
+
+  .astryx-top-nav-item {
+    padding-inline: 16px;
+  }
+
+  .astryx-side-nav {
+    padding-inline: 12px;
+  }
+
+  .astryx-side-nav-item {
+    min-height: 32px;
+    padding-inline: var(--spacing-2);
+    font-size: var(--text-supporting-size);
+    line-height: var(--text-supporting-leading);
   }
 
   .astryx-link {

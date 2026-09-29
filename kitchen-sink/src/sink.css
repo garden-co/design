@@ -1,0 +1,430 @@
+/* Kitchen sink chrome. Theme-dependent parts use Astryx tokens; the settings
+   overlay uses its own fixed palette so it stays usable whatever the theme. */
+
+body {
+  margin: 0;
+  background: var(--color-background-body, #f5f5f5);
+}
+
+.ks-page {
+  min-height: 100vh;
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+}
+
+.ks-spacer {
+  flex: 1;
+}
+
+.ks-logo {
+  height: 1.8rem;
+  width: auto;
+}
+
+/* Overview */
+.ks-overview {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px 160px;
+}
+.ks-toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-supporting-size);
+}
+.ks-toc a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.ks-toc a:hover {
+  color: var(--color-text-primary);
+}
+.ks-overview-main {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  min-width: 0;
+}
+.ks-specimen {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-margin-top: 24px;
+}
+.ks-specimen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+}
+.ks-mono-label {
+  display: inline-block;
+  min-width: 96px;
+  font-family: var(--font-family-code);
+  font-size: var(--text-supporting-size);
+  color: var(--color-text-secondary);
+}
+.ks-grid-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.ks-swatch-card code,
+.ks-radius code {
+  font-family: var(--font-family-code);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.ks-swatch-chip {
+  height: 48px;
+  margin-bottom: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-element);
+}
+.ks-radius {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 64px;
+  border: 1px solid var(--color-border-emphasized, var(--color-border));
+  background: var(--color-background-card);
+}
+.ks-spacing-bar {
+  height: 12px;
+  background: var(--color-accent);
+  border-radius: 2px;
+}
+
+@media (max-width: 800px) {
+  .ks-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ks-toc {
+    display: none;
+  }
+}
+
+/* Principles */
+.ks-principles {
+  padding: 48px 24px 160px;
+}
+.ks-principles .ks-docs-body {
+  gap: 12px;
+  margin: 0 auto;
+}
+.ks-principles .ks-docs-body > h2 {
+  margin-top: 2rem;
+}
+
+/* Docs context: the docs site's article rhythm (garden-co/jazz docs/app/global.css). */
+.ks-docs-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 46rem;
+}
+.ks-docs-body > h2 {
+  margin-top: 1.5rem;
+}
+.ks-docs-body ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.ks-docs-body li + li {
+  margin-top: 0.375rem;
+}
+.ks-docs-body .astryx-table-scroll-wrapper {
+  --container-padding-inline-start: 0px;
+  --container-padding-inline-end: 0px;
+}
+.ks-search-label {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ks-outline {
+  position: sticky;
+  top: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 2rem;
+  font-size: var(--text-supporting-size);
+}
+.ks-outline a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-left: 2px solid var(--color-border);
+  padding-left: 12px;
+}
+.ks-outline a[data-depth='1'] {
+  padding-left: 28px;
+}
+.ks-outline a[aria-current] {
+  color: var(--color-text-primary);
+  border-left-color: var(--color-text-primary);
+  font-weight: 600;
+}
+.ks-neighbours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.ks-neighbours > :last-child {
+  text-align: end;
+}
+.ks-neighbour {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ks-neighbour.is-next {
+  flex-direction: row-reverse;
+}
+
+/* Page switcher (fixed, bottom left) */
+.ks-pages {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 50;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #111;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  font: 13px/1.2 system-ui, sans-serif;
+}
+.ks-pages a {
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: #bbb;
+  text-decoration: none;
+}
+.ks-pages a[aria-current] {
+  background: #333;
+  color: #fff;
+}
+
+/* Settings overlay (fixed palette, independent of the theme) */
+@media (min-width: 1280px) {
+  .ks-overlay-open body {
+    padding-right: 412px;
+  }
+}
+.ks-fab,
+.ks-overlay {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  font: 13px/1.4 system-ui, sans-serif;
+  color: #eee;
+  color-scheme: dark;
+}
+.ks-fab {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #111;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  cursor: pointer;
+}
+.ks-overlay {
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  border-radius: 12px;
+  background: #151515;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
+  overflow: hidden;
+}
+.ks-overlay button,
+.ks-overlay select,
+.ks-overlay input,
+.ks-overlay textarea {
+  font: inherit;
+  color: inherit;
+}
+.ks-overlay button {
+  padding: 5px 10px;
+  white-space: nowrap;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #222;
+  cursor: pointer;
+}
+.ks-overlay button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ks-overlay .ks-primary {
+  border-color: #146aff;
+  background: #146aff;
+  color: #fff;
+}
+.ks-overlay-header,
+.ks-overlay-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #262626;
+}
+.ks-overlay-footer {
+  border-top: 1px solid #262626;
+  border-bottom: 0;
+  color: #999;
+}
+.ks-overlay-body {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 0;
+}
+.ks-section {
+  border-bottom: 1px solid #222;
+}
+.ks-section > summary {
+  padding: 10px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ks-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 14px;
+}
+.ks-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.ks-row-label {
+  display: flex;
+  flex-direction: column;
+  color: #ccc;
+}
+.ks-hint {
+  font-size: 11px;
+  color: #777;
+}
+.ks-row-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ks-row-control input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #146aff;
+}
+.ks-overlay select,
+.ks-text,
+.ks-number,
+.ks-json {
+  padding: 5px 8px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0d0d0d;
+}
+.ks-overlay select {
+  flex: 1;
+}
+.ks-number {
+  width: 64px;
+}
+.ks-text {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, monospace !important;
+  font-size: 12px !important;
+}
+.ks-reset {
+  padding: 3px 7px !important;
+}
+.ks-color {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ks-swatch {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  overflow: hidden;
+  background-image: linear-gradient(45deg, #444 25%, transparent 25%);
+}
+.ks-swatch input[type='color'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.ks-token {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ks-token-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ks-token-name code {
+  color: #ccc;
+}
+.ks-token-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.ks-segmented {
+  display: flex;
+  gap: 4px;
+}
+.ks-segmented button {
+  flex: 1;
+}
+.ks-segmented .is-on {
+  border-color: #146aff;
+  background: #1c2b4a;
+}
+.ks-json {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: ui-monospace, monospace !important;
+  font-size: 12px !important;
+}
+.ks-help {
+  margin: 0;
+  color: #999;
+}
+.ks-error {
+  margin: 0;
+  color: #ff8080;
+}

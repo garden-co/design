@@ -1,0 +1,28 @@
+/*
+ * Jazz refinements for Astryx component parts that `defineTheme` overrides
+ * cannot reach (they style a component's root, not its inner elements).
+ * Load after the theme CSS:
+ *
+ *   import "@garden-co/design/jazz/theme.css";
+ *   import "@garden-co/design/jazz/components.css";
+ *
+ * Astryx's atomic classes carry raised specificity, hence `!important`.
+ */
+
+/* Keyboard hints: flat keycaps, without the darker bottom edge. */
+.astryx-kbd kbd {
+  border-bottom-width: 0 !important;
+}
+
+/* Side nav section headings: regular weight in the secondary text colour,
+   which keeps AA contrast on the page, surface and card greys. */
+.astryx-side-nav-section > div:first-child,
+.astryx-side-nav-section > div:first-child * {
+  font-weight: var(--font-weight-normal) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+/* Nested side nav entries indent 12px instead of 24px, so long titles fit. */
+.astryx-side-nav [role="group"][id$="-children"] > div {
+  padding-inline-start: var(--spacing-3) !important;
+}

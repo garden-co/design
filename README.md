@@ -12,8 +12,11 @@ from the jazz.tools homepage.
 | `dist/jazz/jazz.{js,css}` | Built Astryx theme for React apps (`<Theme theme={…}>`)  |
 | `dist/jazz/tokens.css`    | Every token resolved on `:root`, for non-React code       |
 | `themes/jazz/fonts.css`   | `@font-face` rules for the families the theme names       |
-| `react/`                  | Small React helpers for theme-only variants (`Eyebrow`)   |
 | `fonts/`                  | Font files, each under its **own** licence (see below)    |
+
+Design rules for people and agents live in [`principles.mdx`](principles.mdx),
+also rendered in the kitchen sink and served raw at
+`https://jazz-design-kitchen-sink.vercel.app/principles.mdx`.
 
 ## Install
 
@@ -58,6 +61,22 @@ pnpm install
 pnpm build   # rebuild dist/ after editing a theme, then commit it
 pnpm check   # what CI runs: fails when dist/ is stale
 ```
+
+### Kitchen sink
+
+```sh
+pnpm install
+pnpm sink    # http://localhost:5173
+```
+
+`kitchen-sink/` is a local app that renders every Astryx component in the Jazz
+theme, three ways: a component overview, a docs page and a dashboard screen
+assembled the way the real products assemble them. A settings panel re-themes
+everything live (mode, accent, greys, contrast, type scale and faces, radius,
+pinned colours, component overrides as JSON). Changes stay in your browser;
+**Copy changes** puts a JSON diff against `jazzTheme.ts` on the clipboard to
+paste back into the theme. `vercel.json` deploys it as a static site
+(served with `noindex`); keep it on its vercel.app domain.
 
 `dist/` is committed on purpose: git dependencies are installed without
 running build scripts.

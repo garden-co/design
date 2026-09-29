@@ -13,22 +13,22 @@
     },
     "./jazz/theme.css": "./dist/jazz/jazz.css",
     "./jazz/tokens.css": "./dist/jazz/tokens.css",
+    "./jazz/components.css": "./themes/jazz/components.css",
     "./jazz/fonts.css": "./themes/jazz/fonts.css",
-    "./fonts/*": "./fonts/*",
-    "./react": {
-      "types": "./react/index.d.ts",
-      "default": "./react/index.js"
-    }
+    "./fonts/*": "./fonts/*"
   },
   "files": [
     "dist",
     "fonts",
     "themes/jazz/fonts.css",
-    "react"
+    "themes/jazz/components.css"
   ],
   "scripts": {
     "build": "tsx scripts/build.mjs",
-    "check": "tsx scripts/build.mjs --check"
+    "check": "tsx scripts/build.mjs --check",
+    "sink": "vite kitchen-sink",
+    "sink:build": "vite build kitchen-sink",
+    "sink:typecheck": "tsc -p kitchen-sink"
   },
   "peerDependencies": {
     "@astryxdesign/core": "^0.6.3",
@@ -45,9 +45,17 @@
   "devDependencies": {
     "@astryxdesign/cli": "0.6.3",
     "@astryxdesign/core": "0.6.3",
+    "@mdx-js/rollup": "^3.1.1",
     "@stylexjs/stylex": "^0.17.0",
+    "@types/mdx": "^2.0.14",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.6"
   }
 }
