@@ -176,7 +176,7 @@ export const jazzTheme = {
         "fontSize": "2.25rem",
         "lineHeight": "2.5rem",
         "fontWeight": "900",
-        "letterSpacing": "-0.06em"
+        "letterSpacing": "-0.04em"
       },
       "base": {
         "letterSpacing": "-0.02em",
