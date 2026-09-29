@@ -21,6 +21,7 @@ The theme source is [`themes/jazz/jazzTheme.ts`](https://github.com/garden-co/de
 - Greys are Tailwind stone, pinned in the theme: page `#F5F5F4` / `#0C0A09`, surfaces and popovers white / `#0C0A09`, cards white / `#1C1917`.
 - In dark mode, cards are lighter than the surface they sit on, never darker.
 - The accent is the logo blue `#146AFF`. Use it for primary actions, the selected state and focus rings. Don't use it for decoration or large fills.
+- The brand palette (`@garden-co/design/jazz/palette.css`) is for diagrams and illustrations: `--color-jazz-blue` means local (on a device, mergeable), `--color-jazz-green` means global (the core, exclusive). Keep that meaning wherever both appear.
 - Accent-coloured text and icons use `--color-text-accent` / `--color-icon-accent`, which are one step darker in light mode and one step lighter in dark mode, so they pass AA.
 - All text meets WCAG AA contrast (4.5:1 for body text, 3:1 for large text) in both modes. Secondary text is `--color-text-secondary`, never a lighter ad-hoc grey.
 - Status uses `Banner` / `Badge` / `StatusDot` variants (`success`, `warning`, `error`, `info`). Colour is never the only signal: pair it with a label or an icon.

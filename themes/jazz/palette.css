@@ -1,0 +1,29 @@
+/*
+ * Jazz brand palette, sampled from the Jazz print material. These colours
+ * carry meaning in diagrams and illustrations:
+ *
+ *   blue  = local: on a device, instantly visible, mergeable
+ *   green = global: the core, authoritative, exclusive
+ *
+ * Text colours pass WCAG AA on the page background in both modes. The tints
+ * are for fills behind blue or green text. The stipple, paper, periwinkle
+ * and rose colours are for illustrations and patterns, never for text.
+ *
+ *   import "@garden-co/design/jazz/palette.css";
+ *
+ * The UI accent stays `--color-accent` (logo blue); use these for brand
+ * illustration, not for buttons or links.
+ */
+
+:root {
+  --color-jazz-blue: light-dark(#0b2deb, #8c99ff);
+  --color-jazz-green: light-dark(#2e7d4f, #6cc795);
+  --color-jazz-blue-tint: light-dark(#dee4fc, #171c45);
+  --color-jazz-green-tint: light-dark(#e4f0ea, #13281c);
+
+  --color-jazz-stipple-blue: #484e84;
+  --color-jazz-stipple-green: #549072;
+  --color-jazz-paper: light-dark(#ded8c6, #262320);
+  --color-jazz-periwinkle: #7884d8;
+  --color-jazz-rose: #ccaea8;
+}
