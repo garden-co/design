@@ -19,3 +19,5 @@ jobs:
       # Built themes are committed for git-dependency consumers; fail if the
       # committed output does not match the theme sources.
       - run: pnpm check
+      - run: pnpm test
+      - run: pnpm sink:typecheck

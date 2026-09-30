@@ -6,12 +6,14 @@ import {OverviewPage} from './pages/overview';
 import {DocsContextPage} from './pages/docs-context';
 import {DashboardContextPage} from './pages/dashboard-context';
 import {PrinciplesPage} from './pages/principles';
+import {StipplePage} from './pages/stipple';
 
 export const PAGES = [
   {id: 'principles', label: 'Principles', render: () => <PrinciplesPage />},
   {id: 'overview', label: 'Components', render: () => <OverviewPage />},
   {id: 'docs', label: 'In context: docs', render: () => <DocsContextPage />},
   {id: 'dashboard', label: 'In context: dashboard', render: () => <DashboardContextPage />},
+  {id: 'stipple', label: 'Stipple patterns', render: () => <StipplePage />},
 ] as const;
 
 export type PageId = (typeof PAGES)[number]['id'];

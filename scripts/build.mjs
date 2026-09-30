@@ -8,7 +8,8 @@
 // pnpm does not run build scripts for git dependencies by default.
 
 import {execFileSync} from 'node:child_process';
-import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 
@@ -40,6 +41,28 @@ for (const theme of themes) {
   } else if (!existsSync(tokensPath) || readFileSync(tokensPath, 'utf8') !== tokens) {
     stale.push(`${outDir}/tokens.css`);
   }
+}
+
+// The stipple package (stipple/): compiled with tsc into dist/stipple/, with
+// its relative `.ts`/`.tsx` specifiers (imports, and the worker's
+// `new URL(...)`, which tsc leaves alone) pointed at the emitted `.js`.
+{
+  const tmp = mkdtempSync(path.join(tmpdir(), 'stipple-'));
+  execFileSync('pnpm', ['exec', 'tsc', '-p', 'stipple/tsconfig.json', '--outDir', tmp], {
+    cwd: root,
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+  const outDir = path.join(root, 'dist', 'stipple');
+  mkdirSync(outDir, {recursive: true});
+  const built = readdirSync(tmp).sort();
+  for (const file of built) {
+    const text = readFileSync(path.join(tmp, file), 'utf8').replace(/(["']\.\/[\w.-]+)\.tsx?(["'])/g, '$1.js$2');
+    const target = path.join(outDir, file);
+    if (!check) writeFileSync(target, text);
+    else if (!existsSync(target) || readFileSync(target, 'utf8') !== text) stale.push(`dist/stipple/${file}`);
+  }
+  if (check && readdirSync(outDir).sort().join() !== built.join()) stale.push('dist/stipple/ (file list)');
+  rmSync(tmp, {recursive: true, force: true});
 }
 
 if (stale.length) {

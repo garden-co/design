@@ -17,6 +17,14 @@ const LOGO_BLUE = '#146AFF';
 const LOGO_BLUE_TEXT_ON_LIGHT = '#1263F0';
 const LOGO_BLUE_ON_DARK = '#3D84FF';
 
+// The two stipple inks from the homepage hero (see palette.css). Light mode
+// uses darker steps so they pass WCAG AA as text (mint 5.2:1, periwinkle
+// 5.3:1 on #F5F5F4); dark mode uses the inks themselves (14.4:1, 5.7:1 on
+// #0C0A09).
+const MINT = ['#0E7550', '#62F5C0'] as [string, string];
+const PERIWINKLE = ['#4258D7', '#7383E0'] as [string, string];
+const DEEP_BLUE = ['#0B3D99', '#A9C6FF'] as [string, string];
+
 /**
  * The raw theme input, exported so tools such as the kitchen sink's settings
  * overlay can derive live variants from it.
@@ -79,6 +87,26 @@ export const jazzThemeInput = {
     '--text-display-2-weight': '900',
     '--text-display-3-weight': '900',
     '--focus-outline-color': 'var(--color-accent)',
+    // Code is coloured with the same three hues as the brand: blue for the
+    // language's own words, mint for literal data, periwinkle for names of
+    // shapes (types, properties, attributes). Everything else stays grey.
+    '--color-syntax-keyword': [LOGO_BLUE_TEXT_ON_LIGHT, LOGO_BLUE_ON_DARK],
+    '--color-syntax-tag': [LOGO_BLUE_TEXT_ON_LIGHT, LOGO_BLUE_ON_DARK],
+    '--color-syntax-function': DEEP_BLUE,
+    '--color-syntax-string': MINT,
+    '--color-syntax-number': MINT,
+    '--color-syntax-constant': MINT,
+    '--color-syntax-type': PERIWINKLE,
+    '--color-syntax-property': PERIWINKLE,
+    '--color-syntax-attribute': PERIWINKLE,
+    '--color-syntax-operator': ['#57534E', '#A8A29E'],
+    '--color-text-green': MINT,
+    '--color-text-teal': MINT,
+    '--color-text-purple': PERIWINKLE,
+    // Charts lead with the brand hues.
+    '--color-data-categorical-blue': [LOGO_BLUE, LOGO_BLUE],
+    '--color-data-categorical-green': ['#13A06E', '#62F5C0'],
+    '--color-data-categorical-indigo': ['#7383E0', '#7383E0'],
   },
 
   components: {
