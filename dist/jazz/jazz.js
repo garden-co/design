@@ -169,7 +169,7 @@ export const jazzTheme = {
         "fontSize": "clamp(2.75rem, 5vw, 6rem)",
         "lineHeight": "0.9",
         "fontWeight": "900",
-        "letterSpacing": "-0.06em"
+        "letterSpacing": "-0.05em"
       },
       "type:display-3": {
         "fontFamily": "var(--font-family-heading)",
