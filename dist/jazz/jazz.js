@@ -117,7 +117,23 @@ export const jazzTheme = {
     "--font-family-body": "body_font, ui-sans-serif, system-ui, sans-serif",
     "--font-family-heading": "main_font, ui-sans-serif, system-ui, sans-serif",
     "--font-family-code": "code_font, \"Geist Mono\", ui-monospace, monospace",
-    "--focus-outline-color": "var(--color-accent)"
+    "--focus-outline-color": "var(--color-accent)",
+    "--color-syntax-keyword": "light-dark(#1263F0, #3D84FF)",
+    "--color-syntax-tag": "light-dark(#1263F0, #3D84FF)",
+    "--color-syntax-function": "light-dark(#0B3D99, #A9C6FF)",
+    "--color-syntax-string": "light-dark(#0E7550, #62F5C0)",
+    "--color-syntax-number": "light-dark(#0E7550, #62F5C0)",
+    "--color-syntax-constant": "light-dark(#0E7550, #62F5C0)",
+    "--color-syntax-type": "light-dark(#4258D7, #7383E0)",
+    "--color-syntax-property": "light-dark(#4258D7, #7383E0)",
+    "--color-syntax-attribute": "light-dark(#4258D7, #7383E0)",
+    "--color-syntax-operator": "light-dark(#57534E, #A8A29E)",
+    "--color-text-green": "light-dark(#0E7550, #62F5C0)",
+    "--color-text-teal": "light-dark(#0E7550, #62F5C0)",
+    "--color-text-purple": "light-dark(#4258D7, #7383E0)",
+    "--color-data-categorical-blue": "light-dark(#146AFF, #146AFF)",
+    "--color-data-categorical-green": "light-dark(#13A06E, #62F5C0)",
+    "--color-data-categorical-indigo": "light-dark(#7383E0, #7383E0)"
   },
   components: {
     "heading": {

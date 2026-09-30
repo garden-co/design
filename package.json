@@ -16,6 +16,10 @@
     "./jazz/components.css": "./themes/jazz/components.css",
     "./jazz/fonts.css": "./themes/jazz/fonts.css",
     "./jazz/palette.css": "./themes/jazz/palette.css",
+    "./stipple": {
+      "types": "./dist/stipple/index.d.ts",
+      "default": "./dist/stipple/index.js"
+    },
     "./fonts/*": "./fonts/*"
   },
   "files": [
@@ -30,7 +34,8 @@
     "check": "tsx scripts/build.mjs --check",
     "sink": "vite kitchen-sink",
     "sink:build": "vite build kitchen-sink",
-    "sink:typecheck": "tsc -p kitchen-sink"
+    "sink:typecheck": "tsc -p kitchen-sink",
+    "test": "tsx --test stipple/*.test.ts"
   },
   "peerDependencies": {
     "@astryxdesign/core": "^0.6.3",

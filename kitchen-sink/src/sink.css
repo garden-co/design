@@ -428,3 +428,99 @@ body {
   margin: 0;
   color: #ff8080;
 }
+
+/* Stipple patterns */
+.ks-stipple {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24rem;
+  gap: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 48px 24px 160px;
+}
+@media (max-width: 1023px) {
+  .ks-stipple {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ks-stipple-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.ks-stipple-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+}
+.ks-stipple-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ks-stipple-handles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ks-stipple-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  translate: -50% -50%;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  cursor: grab;
+  pointer-events: auto;
+}
+.ks-stipple-handle:active {
+  cursor: grabbing;
+}
+.ks-stipple-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ks-stipple-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.ks-stipple-ink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ks-stipple-select,
+.ks-stipple-json,
+.ks-stipple-swatch {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-element, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.ks-stipple-select {
+  width: 100%;
+  padding: 8px;
+}
+.ks-stipple-swatch {
+  width: 48px;
+  height: 36px;
+  cursor: pointer;
+}
+.ks-stipple-range {
+  width: 100%;
+}
+.ks-stipple-json {
+  width: 100%;
+  height: 32rem;
+  padding: 8px;
+  font-family: var(--font-family-code);
+  font-size: 12px;
+}

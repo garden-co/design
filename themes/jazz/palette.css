@@ -1,32 +1,35 @@
 /*
- * Jazz brand palette, sampled from the Jazz print material. These colours
- * carry meaning in diagrams and illustrations:
+ * Jazz brand palette. Three colours carry the whole scheme: the logo blue
+ * and the two stipple inks from the homepage hero, mint and periwinkle.
+ * In diagrams and illustrations they mean:
  *
- *   blue  = local: on a device, instantly visible, mergeable
- *   green = global: the core, authoritative, exclusive
+ *   blue       = local: on a device, instantly visible, mergeable
+ *   mint       = global: the core, authoritative, exclusive
+ *   periwinkle = in between: sync, the edge, data in flight
  *
- * Blue is the logo blue (#146AFF), the same as the UI accent; dark mode uses
- * the theme's lighter logo-blue step (#3D84FF). Text colours pass WCAG AA on
- * card backgrounds in both modes. The tints are for area fills, such as a
- * highlighted box; put small blue text on the card background, not on the
- * blue tint (3.9:1 in light mode). The stipple, paper, periwinkle
- * and rose colours are for illustrations and patterns, never for text.
+ * The raw inks (`--color-jazz-ink-*`) are for patterns and large fills
+ * only; mint in particular is far too light for text on the light page
+ * (1.25:1). The text colours are darker (light mode) or the ink itself
+ * (dark mode) and pass WCAG AA on the page and card backgrounds in both
+ * modes: mint 5.2:1 / 14.4:1, periwinkle 5.3:1 / 5.7:1, blue 4.7:1 / 5.6:1.
+ * The tints are for area fills, such as a highlighted box.
  *
  *   import "@garden-co/design/jazz/palette.css";
  *
- * Use these for brand illustration, not for buttons or links; those use
- * `--color-accent`.
+ * Use these for brand illustration, diagrams and code, not for buttons or
+ * links; those use `--color-accent`. The Jazz theme already maps them onto
+ * the syntax and categorical data tokens.
  */
 
 :root {
-  --color-jazz-blue: light-dark(#146aff, #3d84ff);
-  --color-jazz-green: light-dark(#2e7d4f, #6cc795);
-  --color-jazz-blue-tint: light-dark(#e3edff, #0f2242);
-  --color-jazz-green-tint: light-dark(#e4f0ea, #13281c);
+  --color-jazz-ink-mint: #62f5c0;
+  --color-jazz-ink-periwinkle: #7383e0;
 
-  --color-jazz-stipple-blue: #484e84;
-  --color-jazz-stipple-green: #549072;
-  --color-jazz-paper: light-dark(#ded8c6, #262320);
-  --color-jazz-periwinkle: #7884d8;
-  --color-jazz-rose: #ccaea8;
+  --color-jazz-blue: light-dark(#146aff, #3d84ff);
+  --color-jazz-mint: light-dark(#0e7550, #62f5c0);
+  --color-jazz-periwinkle: light-dark(#4258d7, #7383e0);
+
+  --color-jazz-blue-tint: light-dark(#e3edff, #0f2242);
+  --color-jazz-mint-tint: light-dark(#dcf7ec, #0c2a1f);
+  --color-jazz-periwinkle-tint: light-dark(#e7e9fa, #1a1d3a);
 }
