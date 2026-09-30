@@ -100,12 +100,13 @@ export const jazzThemeInput = {
         letterSpacing: '-0.05em',
         fontWeight: '900',
       },
-      // "npm create jazz" footer line.
+      // "npm create jazz" footer line. Slightly looser than -0.06em
+      // (Anselm, 2026-09-30).
       'type:display-2': {
         fontSize: 'clamp(2.75rem, 5vw, 6rem)',
         fontWeight: '900',
         lineHeight: '0.9',
-        letterSpacing: '-0.06em',
+        letterSpacing: '-0.05em',
       },
       // Homepage section headings and big figures such as pricing meters.
       // Slightly looser than display-1/2, which run larger (Anselm,

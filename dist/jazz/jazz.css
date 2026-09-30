@@ -307,7 +307,7 @@
     font-size: clamp(2.75rem, 5vw, 6rem);
     line-height: 0.9;
     font-weight: 900;
-    letter-spacing: -0.06em;
+    letter-spacing: -0.05em;
   }
 
   .astryx-heading[data-type="display-3"] {
