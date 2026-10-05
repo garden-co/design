@@ -51,11 +51,52 @@ const STORAGE_KEY = 'jazz-kitchen-sink-settings-v1';
 function load(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return {...initialSettings, ...JSON.parse(raw)};
+    if (raw) return sanitize(JSON.parse(raw));
   } catch {
     // Private windows and blocked storage fall back to the defaults.
   }
   return initialSettings;
+}
+
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+const oneOf = <T,>(v: unknown, options: readonly T[], fallback: T): T =>
+  options.includes(v as T) ? (v as T) : fallback;
+const stringOrNull = (v: unknown) => (typeof v === 'string' && v !== '' ? v : null);
+const numberOrNull = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+/**
+ * Settings saved by an older version of this page can hold values it no
+ * longer offers (a removed grey family, say). Each field keeps a stored
+ * value only if it is still valid, so a stale save can't break the page.
+ */
+function sanitize(stored: unknown): Settings {
+  if (!isRecord(stored)) return initialSettings;
+  return {
+    mode: oneOf(stored.mode, ['light', 'dark', 'system'] as const, initialSettings.mode),
+    accent: stringOrNull(stored.accent),
+    neutralStyle: oneOf(stored.neutralStyle, ['neutral', 'warm', 'cool', null] as const, null),
+    greyPreset: oneOf(stored.greyPreset, [...GREY_PRESETS, null], null),
+    contrast: oneOf(stored.contrast, ['standard', 'high', null] as const, null),
+    typeBase: numberOrNull(stored.typeBase),
+    typeRatio: numberOrNull(stored.typeRatio),
+    radiusBase: numberOrNull(stored.radiusBase),
+    radiusMultiplier: numberOrNull(stored.radiusMultiplier),
+    bodyFamily: stringOrNull(stored.bodyFamily),
+    headingFamily: stringOrNull(stored.headingFamily),
+    codeFamily: stringOrNull(stored.codeFamily),
+    weights: isRecord(stored.weights)
+      ? (Object.fromEntries(Object.entries(stored.weights).filter(([, w]) => typeof w === 'string')) as Record<string, string>)
+      : {},
+    tokens: isRecord(stored.tokens)
+      ? (Object.fromEntries(
+          Object.entries(stored.tokens).filter(
+            ([, v]) => typeof v === 'string' || (Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === 'string')),
+          ),
+        ) as Settings['tokens'])
+      : {},
+    componentsJson: typeof stored.componentsJson === 'string' ? stored.componentsJson : '',
+  };
 }
 
 type ComponentOverrides = NonNullable<DefineThemeInput['components']>;
