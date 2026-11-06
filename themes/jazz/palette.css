@@ -1,15 +1,15 @@
 /*
- * Jazz brand palette. Three colours carry the whole scheme: the logo blue
- * and the two stipple inks from the homepage hero, mint and periwinkle.
- * In diagrams and illustrations they mean:
+ * Jazz brand palette. Three colours carry the whole scheme: the logo blue,
+ * mint and periwinkle. The homepage hero is stippled in mint and the logo
+ * blue. In diagrams and illustrations they mean:
  *
  *   blue       = local: on a device, instantly visible, mergeable
  *   mint       = global: the core, authoritative, exclusive
  *   periwinkle = in between: sync, the edge, data in flight
  *
- * The raw inks (`--color-jazz-ink-*`) are for patterns and large fills
- * only; mint in particular is far too light for text on the light page
- * (1.25:1). The text colours are darker (light mode) or the ink itself
+ * The raw inks (`--color-jazz-ink-*`, the same as `jazzInks` in
+ * `@garden-co/design/stipple`) are for patterns and large fills only; mint
+ * in particular is too light for text on the light page. The text colours are darker (light mode) or the ink itself
  * (dark mode) and pass WCAG AA on the page and card backgrounds in both
  * modes: mint 5.2:1 / 14.4:1, periwinkle 5.3:1 / 5.7:1, blue 4.7:1 / 5.6:1.
  * The tints are for area fills, such as a highlighted box.
@@ -22,8 +22,8 @@
  */
 
 :root {
-  --color-jazz-ink-mint: #62f5c0;
-  --color-jazz-ink-periwinkle: #7383e0;
+  --color-jazz-ink-mint: light-dark(#00c17b, #62f5c0);
+  --color-jazz-ink-blue: #146aff;
 
   --color-jazz-blue: light-dark(#146aff, #3d84ff);
   --color-jazz-mint: light-dark(#0e7550, #62f5c0);
