@@ -1,4 +1,23 @@
 import type { StipplePattern } from './stipple.js';
+/**
+ * The two brand inks, mint and the logo blue, per colour scheme (palette.css:
+ * --color-jazz-ink-mint, --color-jazz-ink-blue). A canvas paints literal
+ * colours, so pick the set for the page's resolved theme:
+ *
+ *   <StippleCanvas pattern={{...heroPattern, inks: jazzInks[theme]}} />
+ *
+ * The presets carry the light set.
+ */
+export declare const jazzInks: {
+    readonly light: {
+        readonly a: "#00c17b";
+        readonly b: "#146aff";
+    };
+    readonly dark: {
+        readonly a: "#62f5c0";
+        readonly b: "#146aff";
+    };
+};
 /** Diagonal stripes. */
 export declare const stripePattern: StipplePattern;
 /**

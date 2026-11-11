@@ -1,7 +1,22 @@
 import type {Flute, Layer, StipplePattern} from './stipple.ts';
 
-// Pattern units: 1 = half the pattern's height. The two brand inks (palette.css: --color-jazz-ink-mint, --color-jazz-ink-periwinkle).
-const inks = {a: '#62f5c0', b: '#7383e0'};
+// Pattern units: 1 = half the pattern's height.
+
+/**
+ * The two brand inks, mint and the logo blue, per colour scheme (palette.css:
+ * --color-jazz-ink-mint, --color-jazz-ink-blue). A canvas paints literal
+ * colours, so pick the set for the page's resolved theme:
+ *
+ *   <StippleCanvas pattern={{...heroPattern, inks: jazzInks[theme]}} />
+ *
+ * The presets carry the light set.
+ */
+export const jazzInks = {
+  light: {a: '#00c17b', b: '#146aff'},
+  dark: {a: '#62f5c0', b: '#146aff'},
+} as const satisfies Record<'light' | 'dark', StipplePattern['inks']>;
+
+const inks = jazzInks.light;
 
 /**
  * Each ink is a radial gradient centred near the middle (the two slightly
