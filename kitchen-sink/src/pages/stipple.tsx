@@ -6,6 +6,7 @@ import {
   drawStipple,
   gridPattern,
   heroPattern,
+  jazzInks,
   StippleCanvas,
   stripePattern,
   type Flute,
@@ -28,6 +29,20 @@ const sliders = [
 ] as const;
 
 const backgrounds = {dark: '#000000', light: '#f5f5f4', none: 'transparent'};
+type Background = keyof typeof backgrounds;
+
+/**
+ * The brand inks for a background, as the docs hero uses them: mint and the
+ * logo blue, with a brighter mint on dark. A transparent background gets the
+ * light-scheme inks, as presets.ts does.
+ */
+const brandInks = (background: Background) => jazzInks[background === 'dark' ? 'dark' : 'light'];
+const isBrandInks = (inks: StipplePattern['inks']) =>
+  Object.values(jazzInks).some((brand) => brand.a === inks.a && brand.b === inks.b);
+const withBrandInks = (pattern: StipplePattern, background: Background): StipplePattern => ({
+  ...pattern,
+  inks: brandInks(background),
+});
 
 const flutesOf = (pattern: StipplePattern) =>
   pattern.layers.flatMap((layer) => (layer.warps ?? []).filter((warp): warp is Flute => warp.type === 'flute'));
@@ -150,10 +165,10 @@ function CentreHandles({
 
 /** Tunes stipple patterns (stipple/) and exports them as images. */
 export function StipplePage() {
-  const [source, setSource] = useState(() => JSON.stringify(stripePattern, null, 2));
+  const [background, setBackground] = useState<Background>('dark');
+  const [source, setSource] = useState(() => JSON.stringify(withBrandInks(stripePattern, 'dark'), null, 2));
   const [aspect, setAspect] = useState(1.1);
-  const [background, setBackground] = useState<keyof typeof backgrounds>('dark');
-  const lastGood = useRef(stripePattern);
+  const lastGood = useRef(withBrandInks(stripePattern, 'dark'));
   const {pattern, error} = useMemo(() => {
     try {
       lastGood.current = JSON.parse(source) as StipplePattern;
@@ -221,7 +236,7 @@ export function StipplePage() {
           <Text weight="medium">Preset</Text>
           <select
             className="ks-stipple-select"
-            onChange={(event) => setSource(JSON.stringify(presets[event.target.value], null, 2))}
+            onChange={(event) => commit(withBrandInks(presets[event.target.value], background))}
           >
             {Object.keys(presets).map((name) => (
               <option key={name}>{name}</option>
@@ -371,12 +386,16 @@ export function StipplePage() {
           />
         </label>
         <div className="ks-stipple-row">
-          {(Object.keys(backgrounds) as (keyof typeof backgrounds)[]).map((name) => (
+          {(Object.keys(backgrounds) as Background[]).map((name) => (
             <Button
               key={name}
               label={`${name} background`}
               variant={background === name ? 'primary' : 'secondary'}
-              onClick={() => setBackground(name)}
+              onClick={() => {
+                setBackground(name);
+                // Brand inks follow the background, as on the docs hero; inks you picked stay.
+                if (isBrandInks(pattern.inks)) commit(withBrandInks(pattern, name));
+              }}
             />
           ))}
           <Button
