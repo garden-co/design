@@ -476,6 +476,19 @@ body {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   cursor: grab;
   pointer-events: auto;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 600 11px/1 system-ui, sans-serif;
+  text-shadow: 0 0 2px rgb(0 0 0 / 0.7);
+}
+.ks-stipple-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
 }
 .ks-stipple-handle:active {
   cursor: grabbing;

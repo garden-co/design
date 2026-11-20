@@ -62,6 +62,32 @@ export const gridPattern = {
         ...stripes({ type: 'flute', angle: 90, period: 0.12, falloff: 4 }, 1.4, 0.12),
     ],
 };
+/**
+ * The grid with one fluting angle per gradient centre: four layers, each its
+ * own radial gradient behind glass fluted at its own angle (`angles`, in
+ * layer order: ink 1, ink 2, ink 1, ink 2). The centres sit apart so each
+ * can be dragged on its own.
+ */
+export function gridAnglesPattern(angles = [0, 45, 90, 135]) {
+    const centres = [
+        [-0.3, -0.3],
+        [0.3, -0.3],
+        [-0.3, 0.3],
+        [0.3, 0.3],
+    ];
+    return {
+        ...gridPattern,
+        layers: angles.map((angle, index) => {
+            const ink = index % 2 === 0 ? 'a' : 'b';
+            const [x, y] = centres[index];
+            return {
+                ink,
+                source: { type: 'radial', x, y, radius: 1.4, gamma: 1.4 },
+                warps: [{ type: 'flute', angle, period: 0.12, falloff: 4, mirror: ink === 'b' }],
+            };
+        }),
+    };
+}
 const heroFlute = (angle, period, mirror) => ({
     type: 'flute',
     angle,
