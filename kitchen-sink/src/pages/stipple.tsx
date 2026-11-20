@@ -4,6 +4,7 @@ import {Heading} from '@astryxdesign/core/Heading';
 import {Text} from '@astryxdesign/core/Text';
 import {
   drawStipple,
+  gridAnglesPattern,
   gridPattern,
   heroPattern,
   jazzInks,
@@ -17,6 +18,7 @@ import {
 const presets: Record<string, StipplePattern> = {
   stripes: stripePattern,
   grid: gridPattern,
+  'grid, 4 angles': gridAnglesPattern(),
   hero: heroPattern,
 };
 
@@ -78,6 +80,18 @@ function mapFlutes(pattern: StipplePattern, update: (flute: Flute) => Flute): St
       ...layer,
       warps: layer.warps?.map((warp) => (warp.type === 'flute' ? update(warp) : warp)),
     })),
+  };
+}
+
+/** Turns the flutes of one layer (one gradient centre) only. */
+function setLayerAngle(pattern: StipplePattern, index: number, angle: number): StipplePattern {
+  return {
+    ...pattern,
+    layers: pattern.layers.map((layer, i) =>
+      i === index
+        ? {...layer, warps: layer.warps?.map((warp) => (warp.type === 'flute' ? {...warp, angle} : warp))}
+        : layer,
+    ),
   };
 }
 
@@ -156,7 +170,9 @@ function CentreHandles({
               background: pattern.inks[layer.ink],
             }}
             onPointerDown={drag(index)}
-          />
+          >
+            {index + 1}
+          </button>
         ) : null,
       )}
     </div>
@@ -340,6 +356,27 @@ export function StipplePage() {
               </label>
             ),
           )}
+        {pattern.layers.length > 1 &&
+          pattern.layers.map((layer, index) => {
+            const own = (layer.warps ?? []).find((warp): warp is Flute => warp.type === 'flute');
+            return own ? (
+              <label key={`angle-${index}`} className="ks-stipple-field">
+                <Text weight="medium">
+                  <span className="ks-stipple-dot" style={{background: pattern.inks[layer.ink]}} />
+                  Angle at centre {index + 1}: {own.angle}°
+                </Text>
+                <input
+                  type="range"
+                  className="ks-stipple-range"
+                  min={0}
+                  max={180}
+                  step={1}
+                  value={own.angle}
+                  onChange={(event) => commit(setLayerAngle(pattern, index, Number(event.target.value)))}
+                />
+              </label>
+            ) : null;
+          })}
         {radial?.type === 'radial' &&
           radialSliders.map(({key, label, min, max, step}) => (
             <label key={key} className="ks-stipple-field">

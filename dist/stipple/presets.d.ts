@@ -27,6 +27,13 @@ export declare const stripePattern: StipplePattern;
  */
 export declare const gridPattern: StipplePattern;
 /**
+ * The grid with one fluting angle per gradient centre: four layers, each its
+ * own radial gradient behind glass fluted at its own angle (`angles`, in
+ * layer order: ink 1, ink 2, ink 1, ink 2). The centres sit apart so each
+ * can be dragged on its own.
+ */
+export declare function gridAnglesPattern(angles?: [number, number, number, number]): StipplePattern;
+/**
  * The homepage hero: the grid with its density pulled up and to the right,
  * each of the four layers centred on its own point. Drawn into a box with
  * an aspect ratio of 1.1.

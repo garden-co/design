@@ -11,7 +11,7 @@ import {
   type Layer,
   type StipplePattern,
 } from './stipple.ts';
-import {gridPattern, stripePattern} from './presets.ts';
+import {gridAnglesPattern, gridPattern, stripePattern} from './presets.ts';
 
 /** The few matchers these tests use, on node:assert. */
 const expect = (actual: unknown) => ({
@@ -217,5 +217,17 @@ describe('blueNoiseTile', () => {
     for (const n of [64, 256, 1024]) {
       expect(minDistance(tile, n)).toBeGreaterThan(0.5 * (64 / Math.sqrt(n)));
     }
+  });
+});
+
+describe('gridAnglesPattern', () => {
+  it('gives each of its four gradient centres its own fluting angle', () => {
+    const pattern = gridAnglesPattern([10, 20, 30, 40]);
+    const angles = pattern.layers.map((layer) => (layer.warps ?? []).find((warp) => warp.type === 'flute'));
+    expect(angles.map((flute) => (flute?.type === 'flute' ? flute.angle : undefined))).toEqual([10, 20, 30, 40]);
+    const centres = new Set(
+      pattern.layers.map((layer) => (layer.source.type === 'radial' ? `${layer.source.x},${layer.source.y}` : '')),
+    );
+    expect(centres.size).toBe(4);
   });
 });
