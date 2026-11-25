@@ -548,3 +548,15 @@ body {
   width: auto;
   flex: 1;
 }
+.ks-stipple-hex {
+  width: 9ch;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-element, 4px);
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-family-code, monospace);
+}
+.ks-stipple-hex[aria-invalid='true'] {
+  border-color: #e5484d;
+}

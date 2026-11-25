@@ -1,4 +1,4 @@
-import {useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {Button} from '@astryxdesign/core/Button';
 import {Heading} from '@astryxdesign/core/Heading';
 import {Text} from '@astryxdesign/core/Text';
@@ -245,6 +245,39 @@ const radialSliders = [
 ] as const;
 
 /** Draggable dot per radial gradient centre, in the canvas's pattern units. */
+/** "#abc", "abc", "#aabbcc" or "aabbcc" as "#aabbcc"; undefined if it isn't a hex colour. */
+function parseHex(text: string): string | undefined {
+  const hex = text.trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{6}$/.test(hex)) return `#${hex}`;
+  if (/^[0-9a-f]{3}$/.test(hex)) return `#${[...hex].map((c) => c + c).join('')}`;
+  return undefined;
+}
+
+/** A hex text field for a colour: applies as soon as what you type is a valid colour. */
+function HexInput({value, label, onChange}: {value: string; label: string; onChange: (hex: string) => void}) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => {
+    if (parseHex(draft) !== parseHex(value)) setDraft(value);
+  }, [value]);
+  const valid = parseHex(draft) !== undefined;
+  return (
+    <input
+      type="text"
+      className="ks-stipple-hex"
+      aria-label={label}
+      aria-invalid={!valid}
+      spellCheck={false}
+      value={draft}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        const hex = parseHex(event.target.value);
+        if (hex) onChange(hex);
+      }}
+      onBlur={() => setDraft(value)}
+    />
+  );
+}
+
 function CentreHandles({
   pattern,
   onMove,
@@ -406,6 +439,11 @@ export function StipplePage() {
                   />
                   <Text weight="medium">Ink {index + 1}</Text>
                 </label>
+                <HexInput
+                  label={`Hex colour for ink ${index + 1}`}
+                  value={pattern.inks[ink]}
+                  onChange={(hex) => commit({...pattern, inks: {...pattern.inks, [ink]: hex}})}
+                />
                 <select
                   className="ks-stipple-select ks-stipple-select-inline"
                   aria-label={`Source for ink ${index + 1}`}
