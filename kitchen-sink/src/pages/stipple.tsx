@@ -77,6 +77,58 @@ function placeholderImages(): Record<string, StippleImage> {
 const imageSourcesOf = (pattern: StipplePattern) =>
   pattern.layers.map((layer) => layer.source).filter((source): source is ImageSource => source.type === 'image');
 
+type SourceKind = 'radial' | 'linear' | 'image' | 'mixed' | 'none';
+
+/** What an ink reads from: one kind of source, several ("mixed", as some presets do), or none yet. */
+function sourceKindOf(pattern: StipplePattern, ink: string): SourceKind {
+  const kinds = new Set(pattern.layers.filter((layer) => layer.ink === ink).map((layer) => layer.source.type));
+  if (kinds.size === 0) return 'none';
+  if (kinds.size > 1) return 'mixed';
+  const [kind] = kinds;
+  return kind === 'radial' && pattern.layers.filter((layer) => layer.ink === ink).length > 1 ? 'mixed' : kind;
+}
+
+/**
+ * Gives an ink a single layer of the chosen kind, in place of its layers.
+ * Fluting and other warps of its first layer stay; images are named after
+ * the ink.
+ */
+function setInkSource(pattern: StipplePattern, ink: string, kind: SourceKind): StipplePattern {
+  if (kind === 'mixed' || kind === 'none') return pattern;
+  const first = pattern.layers.find((layer) => layer.ink === ink);
+  const at = first?.source.type === 'linear' ? {} : {x: first?.source.x ?? 0, y: first?.source.y ?? 0};
+  const source: Source =
+    kind === 'radial'
+      ? {type: 'radial', x: 0, y: 0, ...at, radius: 1.4, gamma: 1.4}
+      : kind === 'linear'
+        ? {type: 'linear', angle: 0, from: -1, to: 1}
+        : {type: 'image', image: ink, x: 0, y: 0, ...at, height: imageSourcesOf(pattern)[0]?.height ?? 2};
+  const layer: Layer = {ink, source, ...(first?.warps ? {warps: first.warps} : {})};
+  const index = pattern.layers.findIndex((l) => l.ink === ink);
+  const rest = pattern.layers.filter((l) => l.ink !== ink);
+  return {...pattern, layers: index < 0 ? [...rest, layer] : [...rest.slice(0, index), layer, ...rest.slice(index)]};
+}
+
+/** Colours for added inks, in turn. */
+const extraInkColours = ['#ff5c8a', '#ffb020', '#a855f7', '#ffffff', '#111111'];
+
+/** Adds an ink (named c, d, …) with a gradient of its own, painted over the others. */
+function addInk(pattern: StipplePattern): StipplePattern {
+  const names = Object.keys(pattern.inks);
+  let code = 'c'.charCodeAt(0);
+  while (names.includes(String.fromCharCode(code))) code++;
+  const ink = String.fromCharCode(code);
+  const colour = extraInkColours[(names.length - 2 + extraInkColours.length) % extraInkColours.length];
+  // Image presets get another image ink, anything else a gradient.
+  const kind = imageSourcesOf(pattern).length ? 'image' : 'radial';
+  return setInkSource({...pattern, inks: {...pattern.inks, [ink]: colour}}, ink, kind);
+}
+
+function removeInk(pattern: StipplePattern, ink: string): StipplePattern {
+  const {[ink]: _, ...inks} = pattern.inks;
+  return {...pattern, inks, layers: pattern.layers.filter((layer) => layer.ink !== ink)};
+}
+
 function setImageSources(pattern: StipplePattern, update: Partial<ImageSource>): StipplePattern {
   return {
     ...pattern,
@@ -107,7 +159,7 @@ const isBrandInks = (inks: StipplePattern['inks']) =>
   Object.values(jazzInks).some((brand) => brand.a === inks.a && brand.b === inks.b);
 const withBrandInks = (pattern: StipplePattern, background: Background): StipplePattern => ({
   ...pattern,
-  inks: brandInks(background),
+  inks: {...pattern.inks, ...brandInks(background)},
 });
 
 const flutesOf = (pattern: StipplePattern) =>
@@ -323,8 +375,8 @@ export function StipplePage() {
           Drag the round handles to move each ink's gradient centre. One pattern unit is half the image height. Each
           layer reads a gradient through its warps (fluted glass, mirror, rotate), in order from the page towards the
           source. The fluting and gradient sliders set every layer at once. Exports are 3000 px tall with a transparent
-          background. The "image per ink" preset reads each ink's density from a monochrome image you pick (dark or
-          opaque = dense); the images are not part of the JSON.
+          background. Add inks and pick each one's source: a radial or linear gradient, or a monochrome image you pick
+          (dark or opaque = dense). Later inks paint over earlier ones. Images are not part of the JSON.
         </Text>
       </div>
       <div className="ks-stipple-column">
@@ -339,39 +391,80 @@ export function StipplePage() {
             ))}
           </select>
         </label>
+        {Object.keys(pattern.inks).map((ink, index, all) => {
+          const kind = sourceKindOf(pattern, ink);
+          const image = images[ink];
+          return (
+            <div key={ink} className="ks-stipple-ink-card">
+              <div className="ks-stipple-row">
+                <label className="ks-stipple-ink">
+                  <input
+                    type="color"
+                    className="ks-stipple-swatch"
+                    value={pattern.inks[ink]}
+                    onChange={(event) => commit({...pattern, inks: {...pattern.inks, [ink]: event.target.value}})}
+                  />
+                  <Text weight="medium">Ink {index + 1}</Text>
+                </label>
+                <select
+                  className="ks-stipple-select ks-stipple-select-inline"
+                  aria-label={`Source for ink ${index + 1}`}
+                  value={kind}
+                  onChange={(event) => commit(setInkSource(pattern, ink, event.target.value as SourceKind))}
+                >
+                  {kind === 'mixed' && <option value="mixed">as in the preset</option>}
+                  {kind === 'none' && <option value="none">no source</option>}
+                  <option value="radial">radial gradient</option>
+                  <option value="linear">linear gradient</option>
+                  <option value="image">image</option>
+                </select>
+                {all.length > 1 && (
+                  <Button label="Remove" variant="secondary" onClick={() => commit(removeInk(pattern, ink))} />
+                )}
+              </div>
+              {kind === 'image' && (
+                <label className="ks-stipple-field">
+                  <Text color="secondary">
+                    {imageNames[ink] ?? (image ? 'placeholder' : 'pick a monochrome image')}
+                    {image ? ` (${image.width}×${image.height})` : ''}
+                  </Text>
+                  <input type="file" accept="image/*" onChange={(event) => void pickImage(ink, event.target.files?.[0])} />
+                </label>
+              )}
+              {kind === 'linear' &&
+                pattern.layers.map((layer, i) =>
+                  layer.ink === ink && layer.source.type === 'linear' ? (
+                    <label key={i} className="ks-stipple-field">
+                      <Text color="secondary">Gradient angle {layer.source.angle}°</Text>
+                      <input
+                        type="range"
+                        className="ks-stipple-range"
+                        min={0}
+                        max={360}
+                        step={1}
+                        value={layer.source.angle}
+                        onChange={(event) =>
+                          commit({
+                            ...pattern,
+                            layers: pattern.layers.map((l, j) =>
+                              j === i && l.source.type === 'linear'
+                                ? {...l, source: {...l.source, angle: Number(event.target.value)}}
+                                : l,
+                            ),
+                          })
+                        }
+                      />
+                    </label>
+                  ) : null,
+                )}
+            </div>
+          );
+        })}
         <div className="ks-stipple-row">
-          {(['a', 'b'] as const).map((ink) => (
-            <label key={ink} className="ks-stipple-ink">
-              <input
-                type="color"
-                className="ks-stipple-swatch"
-                value={pattern.inks[ink]}
-                onChange={(event) => commit({...pattern, inks: {...pattern.inks, [ink]: event.target.value}})}
-              />
-              <Text weight="medium">Ink {ink === 'a' ? '1' : '2'}</Text>
-            </label>
-          ))}
+          <Button label="Add ink" variant="secondary" onClick={() => commit(addInk(pattern))} />
         </div>
         {imageSources.length > 0 && (
           <>
-            {[...new Set(imageSources.map((source) => source.image))].map((name) => {
-              const layer = pattern.layers.find((l) => l.source.type === 'image' && l.source.image === name);
-              const image = images[name];
-              return (
-                <label key={name} className="ks-stipple-field">
-                  <Text weight="medium">
-                    {layer && <span className="ks-stipple-dot" style={{background: pattern.inks[layer.ink]}} />}
-                    Image “{name}”: {imageNames[name] ?? (image ? 'placeholder' : 'none')}
-                    {image ? ` (${image.width}×${image.height})` : ''}
-                  </Text>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => void pickImage(name, event.target.files?.[0])}
-                  />
-                </label>
-              );
-            })}
             <label className="ks-stipple-field">
               <Text weight="medium">Image height {imageSource.height ?? 2}</Text>
               <input

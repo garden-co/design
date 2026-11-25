@@ -1,4 +1,8 @@
-export type Ink = 'a' | 'b';
+/**
+ * An ink's name: a key of the pattern's `inks`. Two-ink patterns use "a" and
+ * "b"; add more under any other name.
+ */
+export type Ink = string;
 export type Source = 
 /** 1 at the centre falling to 0 at `radius`, shaped by `gamma`. */
 {
@@ -90,10 +94,8 @@ export type Layer = {
 };
 export type StipplePattern = {
     layers: Layer[];
-    inks: {
-        a: string;
-        b: string;
-    };
+    /** Colour per ink, in drawing order (later inks paint over earlier ones). */
+    inks: Record<Ink, string>;
     /** Distance between sample cells, in pattern units. */
     spacing: number;
     /** Dot radius, in pattern units. */
@@ -109,7 +111,7 @@ export type StipplePattern = {
     copies?: number[];
     /** How layers of the same ink combine; defaults to "screen". */
     blend?: Blend;
-    /** "independent" samples each ink on its own points; "shared" allows one dot per point. */
+    /** "independent" samples each ink on its own points; "shared" allows one dot per point, across all inks. */
     sampling?: 'independent' | 'shared';
     /**
      * Where dots can go: "grid" is one candidate per cell, moved by `jitter`;
@@ -120,10 +122,7 @@ export type StipplePattern = {
     /** Bitmaps for image sources, by name. */
     images?: Record<string, StippleImage>;
 };
-export type Densities = {
-    a: number;
-    b: number;
-};
+export type Densities = Record<Ink, number>;
 /** Compiles one layer into a density function of a page point. */
 export declare function compileLayer(layer: Layer, images?: Record<string, StippleImage>): (x: number, y: number) => number;
 /** Density of one layer at a page point. */
@@ -140,7 +139,7 @@ export type Blend = 'screen' | 'max' | 'multiply';
  * origin. Layers of the same ink combine by `blend`: "screen" overlays them
  * like light, "max" keeps the brighter, "multiply" keeps only where all are lit.
  */
-export declare function densitiesAt(layers: Layer[], x: number, y: number, blend?: Blend, images?: Record<string, StippleImage>): Densities;
+export declare function densitiesAt(layers: Layer[], x: number, y: number, blend?: Blend, images?: Record<string, StippleImage>, inks?: Ink[]): Densities;
 export type Dot = {
     x: number;
     y: number;

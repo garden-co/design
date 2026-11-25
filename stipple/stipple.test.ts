@@ -279,3 +279,50 @@ describe('image sources', () => {
     expect(b.filter((dot) => dot.x < -0.5)).toHaveLength(0);
   });
 });
+
+describe('more than two inks', () => {
+  const band = (ink: string, from: number): Layer => ({
+    ink,
+    source: {type: 'image', image: ink, x: from + 0.25, height: 1},
+  });
+  const solid = {width: 1, height: 2, data: [255, 255]};
+  const pattern: StipplePattern = {
+    ...imagePattern,
+    spacing: 0.02,
+    inks: {a: '#000', b: '#111', c: '#222', d: '#333'},
+    // One half-unit-wide band per ink, side by side.
+    layers: [band('a', -1), band('b', -0.5), band('c', 0), band('d', 0.5)],
+    images: {a: solid, b: solid, c: solid, d: solid},
+  };
+
+  it('stipples every ink in its own place', () => {
+    const dots = collect(pattern, -1, -0.5, 1, 0.5);
+    for (const [ink, from] of [['a', -1], ['b', -0.5], ['c', 0], ['d', 0.5]] as const) {
+      const own = dots.filter((dot) => dot.ink === ink);
+      expect(own.length).toBeGreaterThan(50);
+      expect(own.filter((dot) => dot.x < from - 0.01 || dot.x > from + 0.51)).toHaveLength(0);
+    }
+  });
+
+  it('shares points between all inks when asked', () => {
+    const dots = collect({...pattern, sampling: 'shared'}, -1, -0.5, 1, 0.5);
+    expect(new Set(dots.map((dot) => dot.ink)).size).toBe(4);
+    expect(new Set(dots.map((dot) => `${dot.x},${dot.y}`)).size).toBe(dots.length);
+  });
+
+  it('adding an ink leaves the others where they were', () => {
+    const two = {...stripePattern, spacing: 0.02};
+    const three: StipplePattern = {
+      ...two,
+      inks: {...two.inks, c: '#f00'},
+      layers: [...two.layers, {ink: 'c', source: {type: 'radial', radius: 1}}],
+    };
+    const before = collect(two, -1, -1, 1, 1).map(key);
+    const after = collect(three, -1, -1, 1, 1).filter((dot) => dot.ink !== 'c').map(key);
+    expect(after).toEqual(before);
+  });
+
+  it('densitiesAt reports every ink the layers use', () => {
+    expect(Object.keys(densitiesAt(pattern.layers, 0, 0, 'screen', pattern.images))).toEqual(['a', 'b', 'c', 'd']);
+  });
+});

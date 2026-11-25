@@ -4,7 +4,8 @@ import {type CSSProperties, useEffect, useRef} from 'react';
 import {stipple, type StipplePattern} from './stipple.ts';
 import type {StippleRequest, StippleResponse} from './stipple.worker.ts';
 
-type Dots = {a: Float32Array; b: Float32Array};
+/** Dot centres per ink, as x, y pairs. */
+type Dots = Record<string, Float32Array>;
 type Bounds = StippleRequest['bounds'];
 
 let worker: Worker | undefined;
@@ -45,9 +46,9 @@ function runNext() {
 }
 
 function collectDots(pattern: StipplePattern, bounds: Bounds): Dots {
-  const dots = {a: [] as number[], b: [] as number[]};
-  stipple(pattern, bounds, (dot) => dots[dot.ink].push(dot.x, dot.y));
-  return {a: Float32Array.from(dots.a), b: Float32Array.from(dots.b)};
+  const dots: Record<string, number[]> = {};
+  stipple(pattern, bounds, (dot) => (dots[dot.ink] ??= []).push(dot.x, dot.y));
+  return Object.fromEntries(Object.entries(dots).map(([ink, xy]) => [ink, Float32Array.from(xy)]));
 }
 
 /** The pattern area a canvas shows: one unit is half its height, centre in the middle. */
@@ -95,7 +96,7 @@ export function StippleCanvas({
       const bounds = boundsOf(width, height);
       const sized = sizePattern(pattern, canvas);
       // Dots depend on the aspect ratio and pixel-pinned details, not the size.
-      const key = JSON.stringify([(width / height).toFixed(3), sized.spacing, sized.radius, sized.layers]);
+      const key = JSON.stringify([(width / height).toFixed(3), sized.spacing, sized.radius, sized.layers, Object.keys(sized.inks)]);
       if (cached?.key !== key) {
         const dots = await computeDots(sized, bounds);
         if (cancelled || !dots) return;
@@ -156,9 +157,10 @@ function paint(canvas: HTMLCanvasElement, pattern: StipplePattern, dots: Dots) {
   const scale = height / 2;
   const radius = Math.max(pattern.radius * scale, 0.5);
   ctx.clearRect(0, 0, width, height);
-  for (const ink of ['a', 'b'] as const) {
-    const path = new Path2D();
+  for (const ink of Object.keys(pattern.inks)) {
     const xy = dots[ink];
+    if (!xy) continue;
+    const path = new Path2D();
     for (let i = 0; i < xy.length; i += 2) {
       const x = width / 2 + xy[i] * scale;
       const y = height / 2 + xy[i + 1] * scale;

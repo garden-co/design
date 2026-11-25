@@ -7,13 +7,16 @@ export type StippleRequest = {
 };
 
 /** Dot centres per ink, as x, y pairs in pattern units. */
-export type StippleResponse = {a: Float32Array; b: Float32Array};
+export type StippleResponse = Record<string, Float32Array>;
 
 self.onmessage = ({data}: MessageEvent<StippleRequest>) => {
-  const dots = {a: [] as number[], b: [] as number[]};
-  stipple(data.pattern, data.bounds, (dot) => dots[dot.ink].push(dot.x, dot.y));
-  const a = Float32Array.from(dots.a);
-  const b = Float32Array.from(dots.b);
-  const response: StippleResponse = {a, b};
-  (self as unknown as Worker).postMessage(response, [a.buffer, b.buffer]);
+  const dots: Record<string, number[]> = {};
+  stipple(data.pattern, data.bounds, (dot) => (dots[dot.ink] ??= []).push(dot.x, dot.y));
+  const response: StippleResponse = Object.fromEntries(
+    Object.entries(dots).map(([ink, xy]) => [ink, Float32Array.from(xy)]),
+  );
+  (self as unknown as Worker).postMessage(
+    response,
+    Object.values(response).map((xy) => xy.buffer),
+  );
 };

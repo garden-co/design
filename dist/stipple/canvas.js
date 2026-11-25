@@ -38,9 +38,9 @@ function runNext() {
     worker.postMessage(request);
 }
 function collectDots(pattern, bounds) {
-    const dots = { a: [], b: [] };
-    stipple(pattern, bounds, (dot) => dots[dot.ink].push(dot.x, dot.y));
-    return { a: Float32Array.from(dots.a), b: Float32Array.from(dots.b) };
+    const dots = {};
+    stipple(pattern, bounds, (dot) => (dots[dot.ink] ??= []).push(dot.x, dot.y));
+    return Object.fromEntries(Object.entries(dots).map(([ink, xy]) => [ink, Float32Array.from(xy)]));
 }
 /** The pattern area a canvas shows: one unit is half its height, centre in the middle. */
 function boundsOf(width, height) {
@@ -79,7 +79,7 @@ export function StippleCanvas({ pattern, className, style, }) {
             const bounds = boundsOf(width, height);
             const sized = sizePattern(pattern, canvas);
             // Dots depend on the aspect ratio and pixel-pinned details, not the size.
-            const key = JSON.stringify([(width / height).toFixed(3), sized.spacing, sized.radius, sized.layers]);
+            const key = JSON.stringify([(width / height).toFixed(3), sized.spacing, sized.radius, sized.layers, Object.keys(sized.inks)]);
             if (cached?.key !== key) {
                 const dots = await computeDots(sized, bounds);
                 if (cancelled || !dots)
@@ -137,9 +137,11 @@ function paint(canvas, pattern, dots) {
     const scale = height / 2;
     const radius = Math.max(pattern.radius * scale, 0.5);
     ctx.clearRect(0, 0, width, height);
-    for (const ink of ['a', 'b']) {
-        const path = new Path2D();
+    for (const ink of Object.keys(pattern.inks)) {
         const xy = dots[ink];
+        if (!xy)
+            continue;
+        const path = new Path2D();
         for (let i = 0; i < xy.length; i += 2) {
             const x = width / 2 + xy[i] * scale;
             const y = height / 2 + xy[i + 1] * scale;
