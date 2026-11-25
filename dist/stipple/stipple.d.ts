@@ -15,6 +15,32 @@ export type Source =
     from: number;
     to: number;
     gamma?: number;
+}
+/**
+ * A monochrome image, looked up by name in the pattern's `images`: dark
+ * (and opaque) pixels are dense, light or transparent ones empty, or the
+ * other way round with `invert`. Centred on `x`, `y` and `height` pattern
+ * units tall (2, the default, is the full height of the canvas), with its
+ * own aspect ratio; 0 outside it.
+ */
+ | {
+    type: 'image';
+    image: string;
+    x?: number;
+    y?: number;
+    height?: number;
+    invert?: boolean;
+    gamma?: number;
+};
+/**
+ * A greyscale bitmap for an image source: `width × height` densities, 0–255
+ * per pixel, row by row from the top left (255 = full density). Not part of
+ * a pattern's JSON; see `imageDensities` to make one from RGBA pixels.
+ */
+export type StippleImage = {
+    width: number;
+    height: number;
+    data: Uint8Array | Uint8ClampedArray | number[];
 };
 /**
  * Fluted glass with ribs perpendicular to `angle`, `period` apart.
@@ -91,22 +117,30 @@ export type StipplePattern = {
      */
     points?: 'grid' | 'blue-noise';
     seed?: number;
+    /** Bitmaps for image sources, by name. */
+    images?: Record<string, StippleImage>;
 };
 export type Densities = {
     a: number;
     b: number;
 };
 /** Compiles one layer into a density function of a page point. */
-export declare function compileLayer(layer: Layer): (x: number, y: number) => number;
+export declare function compileLayer(layer: Layer, images?: Record<string, StippleImage>): (x: number, y: number) => number;
 /** Density of one layer at a page point. */
-export declare function layerAt(layer: Layer, x: number, y: number): number;
+export declare function layerAt(layer: Layer, x: number, y: number, images?: Record<string, StippleImage>): number;
+/**
+ * Turns RGBA pixels (as from `getImageData`) into an image source's
+ * densities: darkness times opacity, so black ink on white or on a
+ * transparent background is dense where the ink is.
+ */
+export declare function imageDensities(width: number, height: number, rgba: ArrayLike<number>): StippleImage;
 export type Blend = 'screen' | 'max' | 'multiply';
 /**
  * Ink densities (0–1 each) at a page point in pattern units, centre at the
  * origin. Layers of the same ink combine by `blend`: "screen" overlays them
  * like light, "max" keeps the brighter, "multiply" keeps only where all are lit.
  */
-export declare function densitiesAt(layers: Layer[], x: number, y: number, blend?: Blend): Densities;
+export declare function densitiesAt(layers: Layer[], x: number, y: number, blend?: Blend, images?: Record<string, StippleImage>): Densities;
 export type Dot = {
     x: number;
     y: number;

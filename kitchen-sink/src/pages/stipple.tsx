@@ -7,11 +7,15 @@ import {
   gridAnglesPattern,
   gridPattern,
   heroPattern,
+  imageDensities,
+  imagePattern,
   jazzInks,
   StippleCanvas,
   stripePattern,
   type Flute,
   type Layer,
+  type Source,
+  type StippleImage,
   type StipplePattern,
 } from '../../../stipple/index.ts';
 
@@ -20,7 +24,67 @@ const presets: Record<string, StipplePattern> = {
   grid: gridPattern,
   'grid, 4 angles': gridAnglesPattern(),
   hero: heroPattern,
+  'image per ink': imagePattern,
 };
+
+type ImageSource = Extract<Source, {type: 'image'}>;
+
+/** Longest side images are scaled down to: plenty for dots a few px apart. */
+const MAX_IMAGE_SIDE = 1600;
+
+/** Reads a picked file into image-source densities (dark and opaque = dense). */
+async function loadImage(file: File): Promise<StippleImage> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', {willReadFrequently: true})!;
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  return imageDensities(width, height, ctx.getImageData(0, 0, width, height).data);
+}
+
+/** Placeholder images until you pick your own: a soft disc for ink 1, a ring for ink 2. */
+function placeholderImages(): Record<string, StippleImage> {
+  const draw = (paint: (ctx: CanvasRenderingContext2D) => void) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 400;
+    const ctx = canvas.getContext('2d', {willReadFrequently: true})!;
+    paint(ctx);
+    return imageDensities(400, 400, ctx.getImageData(0, 0, 400, 400).data);
+  };
+  return {
+    a: draw((ctx) => {
+      const g = ctx.createRadialGradient(160, 170, 0, 160, 170, 150);
+      g.addColorStop(0, '#000');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 400, 400);
+    }),
+    b: draw((ctx) => {
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 40;
+      ctx.beginPath();
+      ctx.arc(240, 230, 120, 0, Math.PI * 2);
+      ctx.stroke();
+    }),
+  };
+}
+
+const imageSourcesOf = (pattern: StipplePattern) =>
+  pattern.layers.map((layer) => layer.source).filter((source): source is ImageSource => source.type === 'image');
+
+function setImageSources(pattern: StipplePattern, update: Partial<ImageSource>): StipplePattern {
+  return {
+    ...pattern,
+    layers: pattern.layers.map((layer) =>
+      layer.source.type === 'image' ? {...layer, source: {...layer.source, ...update}} : layer,
+    ),
+  };
+}
 
 const sliders = [
   {key: 'spacing', min: 0.002, max: 0.03, step: 0.0005},
@@ -158,11 +222,11 @@ function CentreHandles({
   return (
     <div ref={ref} className="ks-stipple-handles">
       {pattern.layers.map((layer: Layer, index) =>
-        layer.source.type === 'radial' ? (
+        layer.source.type === 'radial' || layer.source.type === 'image' ? (
           <button
             key={index}
             type="button"
-            aria-label={`Move gradient centre ${index + 1}`}
+            aria-label={`Move ${layer.source.type === 'image' ? 'image' : 'gradient'} centre ${index + 1}`}
             className="ks-stipple-handle"
             style={{
               left: `calc(50% + ${layer.source.x ?? 0} * 50cqh)`,
@@ -201,18 +265,33 @@ export function StipplePage() {
     commit({
       ...pattern,
       layers: pattern.layers.map((layer, i) =>
-        i === index && layer.source.type === 'radial' ? {...layer, source: {...layer.source, x, y}} : layer,
+        i === index && (layer.source.type === 'radial' || layer.source.type === 'image')
+          ? {...layer, source: {...layer.source, x, y}}
+          : layer,
       ),
     });
   const flute = flutesOf(pattern)[0];
   const projection: Projection = flute?.projection ?? 'orthographic';
   const radial = pattern.layers.find((layer) => layer.source.type === 'radial')?.source;
 
+  // Bitmaps live outside the JSON (they would swamp it); image sources name them.
+  const [images, setImages] = useState<Record<string, StippleImage>>(placeholderImages);
+  const [imageNames, setImageNames] = useState<Record<string, string>>({});
+  const imageSources = imageSourcesOf(pattern);
+  const imageSource = imageSources[0];
+  const drawn = useMemo(() => (imageSources.length ? {...pattern, images} : pattern), [pattern, images]);
+  const pickImage = async (name: string, file: File | undefined) => {
+    if (!file) return;
+    const image = await loadImage(file);
+    setImages((current) => ({...current, [name]: image}));
+    setImageNames((current) => ({...current, [name]: file.name}));
+  };
+
   const exportPng = () => {
     const canvas = document.createElement('canvas');
     canvas.height = 3000;
     canvas.width = Math.round(3000 * aspect);
-    drawStipple(canvas, pattern);
+    drawStipple(canvas, drawn);
     canvas.toBlob((blob) => {
       if (!blob) return;
       const link = document.createElement('a');
@@ -237,14 +316,15 @@ export function StipplePage() {
             aspectRatio: aspect,
           }}
         >
-          <StippleCanvas pattern={pattern} className="ks-stipple-canvas" />
+          <StippleCanvas pattern={drawn} className="ks-stipple-canvas" />
           {showHandles && <CentreHandles pattern={pattern} onMove={moveCentre} />}
         </div>
         <Text as="p" display="block" color="secondary">
           Drag the round handles to move each ink's gradient centre. One pattern unit is half the image height. Each
           layer reads a gradient through its warps (fluted glass, mirror, rotate), in order from the page towards the
           source. The fluting and gradient sliders set every layer at once. Exports are 3000 px tall with a transparent
-          background.
+          background. The "image per ink" preset reads each ink's density from a monochrome image you pick (dark or
+          opaque = dense); the images are not part of the JSON.
         </Text>
       </div>
       <div className="ks-stipple-column">
@@ -272,6 +352,70 @@ export function StipplePage() {
             </label>
           ))}
         </div>
+        {imageSources.length > 0 && (
+          <>
+            {[...new Set(imageSources.map((source) => source.image))].map((name) => {
+              const layer = pattern.layers.find((l) => l.source.type === 'image' && l.source.image === name);
+              const image = images[name];
+              return (
+                <label key={name} className="ks-stipple-field">
+                  <Text weight="medium">
+                    {layer && <span className="ks-stipple-dot" style={{background: pattern.inks[layer.ink]}} />}
+                    Image “{name}”: {imageNames[name] ?? (image ? 'placeholder' : 'none')}
+                    {image ? ` (${image.width}×${image.height})` : ''}
+                  </Text>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => void pickImage(name, event.target.files?.[0])}
+                  />
+                </label>
+              );
+            })}
+            <label className="ks-stipple-field">
+              <Text weight="medium">Image height {imageSource.height ?? 2}</Text>
+              <input
+                type="range"
+                className="ks-stipple-range"
+                min={0.2}
+                max={6}
+                step={0.05}
+                value={imageSource.height ?? 2}
+                onChange={(event) => commit(setImageSources(pattern, {height: Number(event.target.value)}))}
+              />
+            </label>
+            <label className="ks-stipple-field">
+              <Text weight="medium">Image falloff {imageSource.gamma ?? 1}</Text>
+              <input
+                type="range"
+                className="ks-stipple-range"
+                min={0.2}
+                max={5}
+                step={0.05}
+                value={imageSource.gamma ?? 1}
+                onChange={(event) => commit(setImageSources(pattern, {gamma: Number(event.target.value)}))}
+              />
+            </label>
+            <div className="ks-stipple-row">
+              <Button
+                label={imageSource.invert ? 'Dark is empty' : 'Dark is dense'}
+                variant="secondary"
+                onClick={() => commit(setImageSources(pattern, {invert: !imageSource.invert}))}
+              />
+              {images[imageSource.image] && (
+                <Button
+                  label="Match aspect to image"
+                  variant="secondary"
+                  onClick={() => {
+                    const image = images[imageSource.image];
+                    setAspect(Math.min(2.5, Math.max(0.4, Math.round((image.width / image.height) * 20) / 20)));
+                    commit(setImageSources(pattern, {x: 0, y: 0, height: 2}));
+                  }}
+                />
+              )}
+            </div>
+          </>
+        )}
         {(
           [
             ['blend', ['screen', 'max', 'multiply']],

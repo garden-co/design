@@ -23,7 +23,22 @@ export type Source =
   /** 1 at the centre falling to 0 at `radius`, shaped by `gamma`. */
   | {type: 'radial'; x?: number; y?: number; radius: number; gamma?: number}
   /** 0 at `from` rising to 1 at `to`, along `angle` (0° right, 90° down). */
-  | {type: 'linear'; angle: number; from: number; to: number; gamma?: number};
+  | {type: 'linear'; angle: number; from: number; to: number; gamma?: number}
+  /**
+   * A monochrome image, looked up by name in the pattern's `images`: dark
+   * (and opaque) pixels are dense, light or transparent ones empty, or the
+   * other way round with `invert`. Centred on `x`, `y` and `height` pattern
+   * units tall (2, the default, is the full height of the canvas), with its
+   * own aspect ratio; 0 outside it.
+   */
+  | {type: 'image'; image: string; x?: number; y?: number; height?: number; invert?: boolean; gamma?: number};
+
+/**
+ * A greyscale bitmap for an image source: `width × height` densities, 0–255
+ * per pixel, row by row from the top left (255 = full density). Not part of
+ * a pattern's JSON; see `imageDensities` to make one from RGBA pixels.
+ */
+export type StippleImage = {width: number; height: number; data: Uint8Array | Uint8ClampedArray | number[]};
 
 /**
  * Fluted glass with ribs perpendicular to `angle`, `period` apart.
@@ -93,6 +108,8 @@ export type StipplePattern = {
    */
   points?: 'grid' | 'blue-noise';
   seed?: number;
+  /** Bitmaps for image sources, by name. */
+  images?: Record<string, StippleImage>;
 };
 
 export type Densities = {a: number; b: number};
@@ -168,9 +185,35 @@ function compileWarp(w: Warp): (p: Probe) => void {
   }
 }
 
-function compileSource(src: Source): (x: number, y: number) => number {
+function compileSource(src: Source, images?: Record<string, StippleImage>): (x: number, y: number) => number {
   const gamma = src.gamma ?? 1;
   const shape = (v: number) => (v <= 0 ? 0 : v >= 1 ? 1 : gamma === 1 ? v : Math.pow(v, gamma));
+  if (src.type === 'image') {
+    const img = images?.[src.image];
+    if (!img || !img.width || !img.height) return () => 0;
+    const {width: w, height: h, data} = img;
+    const unit = h / (src.height ?? 2); // pixels per pattern unit
+    const left = (src.x ?? 0) - w / unit / 2;
+    const top = (src.y ?? 0) - h / unit / 2;
+    const invert = src.invert ?? false;
+    const px = (i: number, j: number) => data[j * w + i] / 255;
+    return (x, y) => {
+      // Bilinear between pixel centres, clamped at the edges.
+      const fx = (x - left) * unit - 0.5;
+      const fy = (y - top) * unit - 0.5;
+      if (fx < -0.5 || fy < -0.5 || fx > w - 0.5 || fy > h - 0.5) return 0;
+      const i0 = Math.max(0, Math.min(w - 1, Math.floor(fx)));
+      const j0 = Math.max(0, Math.min(h - 1, Math.floor(fy)));
+      const i1 = Math.min(w - 1, i0 + 1);
+      const j1 = Math.min(h - 1, j0 + 1);
+      const tx = Math.max(0, Math.min(1, fx - i0));
+      const ty = Math.max(0, Math.min(1, fy - j0));
+      const top0 = px(i0, j0) + (px(i1, j0) - px(i0, j0)) * tx;
+      const bottom0 = px(i0, j1) + (px(i1, j1) - px(i0, j1)) * tx;
+      const v = top0 + (bottom0 - top0) * ty;
+      return shape(invert ? 1 - v : v);
+    };
+  }
   if (src.type === 'radial') {
     const cx = src.x ?? 0;
     const cy = src.y ?? 0;
@@ -186,9 +229,12 @@ function compileSource(src: Source): (x: number, y: number) => number {
 }
 
 /** Compiles one layer into a density function of a page point. */
-export function compileLayer(layer: Layer): (x: number, y: number) => number {
+export function compileLayer(
+  layer: Layer,
+  images?: Record<string, StippleImage>,
+): (x: number, y: number) => number {
   const warps = (layer.warps ?? []).map(compileWarp);
-  const read = compileSource(layer.source);
+  const read = compileSource(layer.source, images);
   const gain = layer.gain ?? 1;
   const probe: Probe = {x: 0, y: 0, weight: 1};
   return (x, y) => {
@@ -202,15 +248,38 @@ export function compileLayer(layer: Layer): (x: number, y: number) => number {
 }
 
 /** Density of one layer at a page point. */
-export function layerAt(layer: Layer, x: number, y: number) {
-  return compileLayer(layer)(x, y);
+export function layerAt(layer: Layer, x: number, y: number, images?: Record<string, StippleImage>) {
+  return compileLayer(layer, images)(x, y);
+}
+
+/**
+ * Turns RGBA pixels (as from `getImageData`) into an image source's
+ * densities: darkness times opacity, so black ink on white or on a
+ * transparent background is dense where the ink is.
+ */
+export function imageDensities(width: number, height: number, rgba: ArrayLike<number>): StippleImage {
+  const data = new Uint8Array(width * height);
+  for (let k = 0; k < data.length; k++) {
+    const r = rgba[4 * k];
+    const g = rgba[4 * k + 1];
+    const b = rgba[4 * k + 2];
+    const a = rgba[4 * k + 3] / 255;
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    data[k] = Math.round((255 - luma) * a);
+  }
+  return {width, height, data};
 }
 
 export type Blend = 'screen' | 'max' | 'multiply';
 
 /** Compiles the layers of one ink into its combined density; 0 if it has none. */
-function compileInk(layers: Layer[], ink: Ink, blend: Blend): (x: number, y: number) => number {
-  const parts = layers.filter((layer) => layer.ink === ink).map(compileLayer);
+function compileInk(
+  layers: Layer[],
+  ink: Ink,
+  blend: Blend,
+  images?: Record<string, StippleImage>,
+): (x: number, y: number) => number {
+  const parts = layers.filter((layer) => layer.ink === ink).map((layer) => compileLayer(layer, images));
   if (parts.length === 0) return () => 0;
   return (x, y) => {
     let d = parts[0](x, y);
@@ -227,8 +296,14 @@ function compileInk(layers: Layer[], ink: Ink, blend: Blend): (x: number, y: num
  * origin. Layers of the same ink combine by `blend`: "screen" overlays them
  * like light, "max" keeps the brighter, "multiply" keeps only where all are lit.
  */
-export function densitiesAt(layers: Layer[], x: number, y: number, blend: Blend = 'screen'): Densities {
-  return {a: compileInk(layers, 'a', blend)(x, y), b: compileInk(layers, 'b', blend)(x, y)};
+export function densitiesAt(
+  layers: Layer[],
+  x: number,
+  y: number,
+  blend: Blend = 'screen',
+  images?: Record<string, StippleImage>,
+): Densities {
+  return {a: compileInk(layers, 'a', blend, images)(x, y), b: compileInk(layers, 'b', blend, images)(x, y)};
 }
 
 /** Stateless hash of a grid cell to three uniform numbers in [0, 1). */
@@ -257,8 +332,8 @@ export function stipple(
 ) {
   const layers = expandCopies(pattern);
   const blend = pattern.blend ?? 'screen';
-  const inkA = compileInk(layers, 'a', blend);
-  const inkB = compileInk(layers, 'b', blend);
+  const inkA = compileInk(layers, 'a', blend, pattern.images);
+  const inkB = compileInk(layers, 'b', blend, pattern.images);
   const gain = pattern.gain ?? 1;
   const passes: (Ink | 'both')[] = pattern.sampling === 'shared' ? ['both'] : ['a', 'b'];
   const each = pattern.points === 'blue-noise' ? blueNoisePoints : gridPoints;

@@ -4,6 +4,7 @@ import {
   blueNoiseTile,
   densitiesAt,
   expandCopies,
+  imageDensities,
   layerAt,
   rotated,
   stipple,
@@ -11,7 +12,7 @@ import {
   type Layer,
   type StipplePattern,
 } from './stipple.ts';
-import {gridAnglesPattern, gridPattern, stripePattern} from './presets.ts';
+import {gridAnglesPattern, gridPattern, imagePattern, stripePattern} from './presets.ts';
 
 /** The few matchers these tests use, on node:assert. */
 const expect = (actual: unknown) => ({
@@ -229,5 +230,52 @@ describe('gridAnglesPattern', () => {
       pattern.layers.map((layer) => (layer.source.type === 'radial' ? `${layer.source.x},${layer.source.y}` : '')),
     );
     expect(centres.size).toBe(4);
+  });
+});
+
+describe('image sources', () => {
+  // 2 × 2 pixels: dense on the left column, empty on the right.
+  const images = {half: {width: 2, height: 2, data: [255, 0, 255, 0]}};
+  const layer: Layer = {ink: 'a', source: {type: 'image', image: 'half', height: 2}};
+
+  it('reads pixel densities over the image, 0 outside it and without a bitmap', () => {
+    // Two pattern units tall and wide, centred on the origin: pixel centres at ±0.5.
+    expect(layerAt(layer, -0.5, -0.5, images)).toBe(1);
+    expect(layerAt(layer, 0.5, 0.5, images)).toBe(0);
+    expect(layerAt(layer, 0, 0, images)).toBeCloseTo(0.5);
+    expect(layerAt(layer, -1.5, 0, images)).toBe(0);
+    expect(layerAt(layer, -0.5, 0)).toBe(0);
+    const inverted: Layer = {...layer, source: {type: 'image', image: 'half', height: 2, invert: true}};
+    expect(layerAt(inverted, 0.5, 0.5, images)).toBe(1);
+  });
+
+  it('places and scales the image', () => {
+    const moved: Layer = {ink: 'a', source: {type: 'image', image: 'half', x: 1, y: 0, height: 1}};
+    expect(layerAt(moved, 0.75, 0.25, images)).toBe(1);
+    expect(layerAt(moved, 1.25, 0.25, images)).toBe(0);
+    expect(layerAt(moved, 0.25, 0, images)).toBe(0);
+  });
+
+  it('turns RGBA into darkness times opacity', () => {
+    const img = imageDensities(3, 1, [0, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 0]);
+    expect(Array.from(img.data)).toEqual([255, 0, 0]);
+  });
+
+  it('stipples each ink from its own image', () => {
+    const pattern: StipplePattern = {
+      ...imagePattern,
+      spacing: 0.02,
+      // One unit tall, so the 2 × 1 images span x = -1 to 1.
+      layers: imagePattern.layers.map((layer) => ({...layer, source: {...layer.source, height: 1} as Layer['source']})),
+      images: {a: {width: 2, height: 1, data: [255, 0]}, b: {width: 2, height: 1, data: [0, 255]}},
+    };
+    const dots = collect(pattern, -1, -0.5, 1, 0.5);
+    const a = dots.filter((dot) => dot.ink === 'a');
+    const b = dots.filter((dot) => dot.ink === 'b');
+    expect(a.length).toBeGreaterThan(100);
+    expect(b.length).toBeGreaterThan(100);
+    // Inner halves are well clear of the bilinear blend at x = 0.
+    expect(a.filter((dot) => dot.x > 0.5)).toHaveLength(0);
+    expect(b.filter((dot) => dot.x < -0.5)).toHaveLength(0);
   });
 });
