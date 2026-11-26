@@ -16,6 +16,23 @@
 // which keeps dots evenly spaced at every density and edges crisp. Each ink
 // gets its own points (dots of different inks may overlap, as in print), or
 // the inks share one set (at most one dot per point).
+/** The colour and dot settings an ink is drawn with. */
+export function resolveInk(pattern, ink) {
+    const own = pattern.inks[ink];
+    const style = typeof own === 'string' ? { color: own } : (own ?? {});
+    return {
+        color: style.color ?? 'transparent',
+        spacing: style.spacing ?? pattern.spacing,
+        radius: style.radius ?? pattern.radius,
+        jitter: style.jitter ?? pattern.jitter ?? 1,
+        gain: style.gain ?? pattern.gain ?? 1,
+        seed: style.seed ?? pattern.seed ?? 1,
+        points: style.points ?? pattern.points ?? 'grid',
+        blend: style.blend ?? pattern.blend ?? 'screen',
+    };
+}
+/** An ink's colour. */
+export const inkColor = (pattern, ink) => resolveInk(pattern, ink).color;
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const rad = (deg) => (deg * Math.PI) / 180;
 /**
@@ -206,26 +223,26 @@ function cellRandom(seed, i, j, out) {
  */
 export function stipple(pattern, bounds, emit) {
     const layers = expandCopies(pattern);
-    const blend = pattern.blend ?? 'screen';
-    // Inks with no colour or no layers place no dots, but keep their pass
-    // number, so adding an ink never moves another ink's dots.
+    // Inks with no layers place no dots, but keep their pass number, so
+    // adding an ink never moves another ink's dots.
     const names = Object.keys(pattern.inks);
+    const styles = names.map((name) => resolveInk(pattern, name));
     const used = new Set(layers.map((layer) => layer.ink));
-    const inks = names.map((name) => (used.has(name) ? compileInk(layers, name, blend, pattern.images) : undefined));
-    const gain = pattern.gain ?? 1;
-    const each = pattern.points === 'blue-noise' ? blueNoisePoints : gridPoints;
+    const inks = names.map((name, k) => used.has(name) ? compileInk(layers, name, styles[k].blend, pattern.images) : undefined);
     // One pass per ink, each on its own points ("a" is pass 0, "b" pass 1) ...
     const passes = pattern.sampling === 'shared' ? [-1] : names.map((_, index) => index);
     const d = new Array(names.length).fill(0);
     for (const pass of passes) {
         if (pass >= 0 && !inks[pass])
             continue;
-        // ... or one pass for all of them, sharing the points.
-        each(pattern, bounds, Math.max(pass, 0), (x, y, rank) => {
+        // ... or one pass for all of them, sharing the first ink's points.
+        const placement = styles[Math.max(pass, 0)] ?? resolveInk(pattern, 'a');
+        const each = placement.points === 'blue-noise' ? blueNoisePoints : gridPoints;
+        each(placement, bounds, Math.max(pass, 0), (x, y, rank) => {
             let sum = 0;
             for (let k = 0; k < names.length; k++) {
                 const ink = inks[k];
-                d[k] = ink && (pass < 0 || pass === k) ? clamp01(ink(x, y) * gain) : 0;
+                d[k] = ink && (pass < 0 || pass === k) ? clamp01(ink(x, y) * styles[k].gain) : 0;
                 sum += d[k];
             }
             let edge = 0;
@@ -240,10 +257,9 @@ export function stipple(pattern, bounds, emit) {
     }
 }
 /** One jittered candidate per grid cell, with a random rank. */
-function gridPoints(pattern, bounds, pass, visit) {
-    const { spacing } = pattern;
-    const jitter = pattern.jitter ?? 1;
-    const seed = (pattern.seed ?? 1) + Math.imul(pass, 0x51ed27);
+function gridPoints(placement, bounds, pass, visit) {
+    const { spacing, jitter } = placement;
+    const seed = placement.seed + Math.imul(pass, 0x51ed27);
     const r = [0, 0, 0];
     const j1 = Math.ceil(bounds.bottom / spacing);
     const i1 = Math.ceil(bounds.right / spacing);
@@ -320,9 +336,9 @@ export function blueNoiseTile(seed) {
     return out;
 }
 /** Blue-noise candidates repeated over the plane; rank is the point's order in its tile. */
-function blueNoisePoints(pattern, bounds, pass, visit) {
-    const { spacing } = pattern;
-    const tile = blueNoiseTile(pattern.seed ?? 1);
+function blueNoisePoints(placement, bounds, pass, visit) {
+    const { spacing } = placement;
+    const tile = blueNoiseTile(placement.seed);
     const count = tile.length / 2;
     const size = TILE * spacing;
     // Each further ink reads the same tile shifted, so its dots fall elsewhere.

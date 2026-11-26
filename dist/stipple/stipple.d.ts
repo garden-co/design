@@ -92,17 +92,34 @@ export type Layer = {
     /** Multiplies this layer's density. */
     gain?: number;
 };
+/**
+ * An ink's colour and, optionally, its own dot settings. Anything left out
+ * falls back to the pattern's setting of the same name.
+ */
+export type InkStyle = {
+    color: string;
+    spacing?: number;
+    radius?: number;
+    jitter?: number;
+    gain?: number;
+    seed?: number;
+    points?: 'grid' | 'blue-noise';
+    blend?: Blend;
+};
 export type StipplePattern = {
     layers: Layer[];
-    /** Colour per ink, in drawing order (later inks paint over earlier ones). */
-    inks: Record<Ink, string>;
+    /**
+     * Per ink, in drawing order (later inks paint over earlier ones): a colour,
+     * or a colour with dot settings of its own (see InkStyle).
+     */
+    inks: Record<Ink, string | InkStyle>;
     /** Distance between sample cells, in pattern units. */
     spacing: number;
     /** Dot radius, in pattern units. */
     radius: number;
     /** For grid points: 0 = a regular grid, 1 = anywhere in their cell. */
     jitter?: number;
-    /** Scales both densities before sampling. */
+    /** Scales every ink's density before sampling, unless the ink sets its own. */
     gain?: number;
     /**
      * Extra copies of all layers, turned by these angles and combined with the
@@ -111,7 +128,11 @@ export type StipplePattern = {
     copies?: number[];
     /** How layers of the same ink combine; defaults to "screen". */
     blend?: Blend;
-    /** "independent" samples each ink on its own points; "shared" allows one dot per point, across all inks. */
+    /**
+     * "independent" samples each ink on its own points, with its own dot
+     * settings; "shared" allows one dot per point across all inks, placed by
+     * the first ink's spacing, jitter, points and seed.
+     */
     sampling?: 'independent' | 'shared';
     /**
      * Where dots can go: "grid" is one candidate per cell, moved by `jitter`;
@@ -123,6 +144,12 @@ export type StipplePattern = {
     images?: Record<string, StippleImage>;
 };
 export type Densities = Record<Ink, number>;
+/** An ink's settings with the pattern's filled in where the ink sets none. */
+export type ResolvedInk = Required<InkStyle>;
+/** The colour and dot settings an ink is drawn with. */
+export declare function resolveInk(pattern: StipplePattern, ink: Ink): ResolvedInk;
+/** An ink's colour. */
+export declare const inkColor: (pattern: StipplePattern, ink: Ink) => string;
 /** Compiles one layer into a density function of a page point. */
 export declare function compileLayer(layer: Layer, images?: Record<string, StippleImage>): (x: number, y: number) => number;
 /** Density of one layer at a page point. */

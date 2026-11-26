@@ -432,7 +432,7 @@ body {
 /* Stipple patterns */
 .ks-stipple {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
+  grid-template-columns: minmax(0, 1fr) 26rem;
   gap: 32px;
   max-width: 1400px;
   margin: 0 auto;
@@ -537,17 +537,6 @@ body {
   font-family: var(--font-family-code);
   font-size: 12px;
 }
-.ks-stipple-ink-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.ks-stipple-select-inline {
-  width: auto;
-  flex: 1;
-}
 .ks-stipple-hex {
   width: 9ch;
   padding: 8px;
@@ -559,4 +548,57 @@ body {
 }
 .ks-stipple-hex[aria-invalid='true'] {
   border-color: #e5484d;
+}
+/* Stipple generator page: preview stays in view while the ink controls scroll. */
+.ks-stipple-preview {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+@media (max-width: 1023px) {
+  .ks-stipple-preview {
+    position: static;
+  }
+}
+.ks-stipple-back {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+.ks-stipple-row-between {
+  justify-content: space-between;
+}
+.ks-stipple-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.ks-stipple-group {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ks-stipple-ink-card,
+.ks-stipple-json-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container, 8px);
+}
+.ks-stipple-ink-card > summary,
+.ks-stipple-json-box > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+.ks-stipple-layer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-element, 4px);
+  background: color-mix(in srgb, var(--color-text-primary) 5%, transparent);
 }

@@ -326,3 +326,28 @@ describe('more than two inks', () => {
     expect(Object.keys(densitiesAt(pattern.layers, 0, 0, 'screen', pattern.images))).toEqual(['a', 'b', 'c', 'd']);
   });
 });
+
+describe('per-ink settings', () => {
+  const base: StipplePattern = {
+    ...imagePattern,
+    spacing: 0.02,
+    images: {a: {width: 1, height: 1, data: [128]}, b: {width: 1, height: 1, data: [128]}},
+  };
+  const count = (pattern: StipplePattern, ink: string) =>
+    collect(pattern, -1, -1, 1, 1).filter((dot) => dot.ink === ink).length;
+
+  it('an ink with its own spacing, gain or seed changes only its own dots', () => {
+    const before = collect(base, -1, -1, 1, 1);
+    const finer: StipplePattern = {...base, inks: {...base.inks, b: {color: '#000', spacing: 0.01, seed: 9}}};
+    const after = collect(finer, -1, -1, 1, 1);
+    expect(after.filter((dot) => dot.ink === 'a').map(key)).toEqual(before.filter((dot) => dot.ink === 'a').map(key));
+    expect(count(finer, 'b')).toBeGreaterThan(3 * count(base, 'b'));
+    const dimmer: StipplePattern = {...base, inks: {...base.inks, a: {color: '#000', gain: 0.5}}};
+    expect(count(dimmer, 'a')).toBeLessThan(0.7 * count(base, 'a'));
+  });
+
+  it('an ink style with no settings of its own draws like a plain colour', () => {
+    const styled: StipplePattern = {...base, inks: {a: {color: '#123'}, b: {color: '#456'}}};
+    expect(collect(styled, -1, -1, 1, 1).map(key)).toEqual(collect(base, -1, -1, 1, 1).map(key));
+  });
+});

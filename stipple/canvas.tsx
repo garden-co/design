@@ -1,7 +1,7 @@
 'use client';
 
 import {type CSSProperties, useEffect, useRef} from 'react';
-import {stipple, type StipplePattern} from './stipple.ts';
+import {resolveInk, stipple, type InkStyle, type StipplePattern} from './stipple.ts';
 import type {StippleRequest, StippleResponse} from './stipple.worker.ts';
 
 /** Dot centres per ink, as x, y pairs. */
@@ -96,7 +96,14 @@ export function StippleCanvas({
       const bounds = boundsOf(width, height);
       const sized = sizePattern(pattern, canvas);
       // Dots depend on the aspect ratio and pixel-pinned details, not the size.
-      const key = JSON.stringify([(width / height).toFixed(3), sized.spacing, sized.radius, sized.layers, Object.keys(sized.inks)]);
+      const key = JSON.stringify([
+        (width / height).toFixed(3),
+        sized.spacing,
+        sized.radius,
+        sized.layers,
+        // Ink settings matter, colours don't.
+        Object.entries(sized.inks).map(([ink, style]) => [ink, typeof style === 'string' ? {} : {...style, color: 0}]),
+      ]);
       if (cached?.key !== key) {
         const dots = await computeDots(sized, bounds);
         if (cancelled || !dots) return;
@@ -135,8 +142,27 @@ function sizePattern(pattern: StipplePattern, canvas: HTMLCanvasElement): Stippl
   const radius = px('--pattern-dot-radius');
   const spacing = px('--pattern-dot-spacing');
   const ribUnit = px('--pattern-rib-unit');
+  // Per-ink sizes keep their proportion to the pattern's.
+  const radiusScale = radius ? radius / unit / pattern.radius : 1;
+  const spacingScale = spacing ? spacing / unit / pattern.spacing : 1;
+  const inks =
+    radius || spacing
+      ? Object.fromEntries(
+          Object.entries(pattern.inks).map(([ink, style]): [string, string | InkStyle] => [
+            ink,
+            typeof style === 'string'
+              ? style
+              : {
+                  ...style,
+                  ...(style.radius != null && {radius: round(style.radius * radiusScale)}),
+                  ...(style.spacing != null && {spacing: round(style.spacing * spacingScale)}),
+                },
+          ]),
+        )
+      : pattern.inks;
   return {
     ...pattern,
+    inks,
     radius: radius ? round(radius / unit) : pattern.radius,
     spacing: spacing ? round(spacing / unit) : pattern.spacing,
     layers: ribUnit
@@ -155,11 +181,12 @@ function paint(canvas: HTMLCanvasElement, pattern: StipplePattern, dots: Dots) {
   if (!ctx) return;
   const {width, height} = canvas;
   const scale = height / 2;
-  const radius = Math.max(pattern.radius * scale, 0.5);
   ctx.clearRect(0, 0, width, height);
   for (const ink of Object.keys(pattern.inks)) {
     const xy = dots[ink];
     if (!xy) continue;
+    const style = resolveInk(pattern, ink);
+    const radius = Math.max(style.radius * scale, 0.5);
     const path = new Path2D();
     for (let i = 0; i < xy.length; i += 2) {
       const x = width / 2 + xy[i] * scale;
@@ -167,7 +194,7 @@ function paint(canvas: HTMLCanvasElement, pattern: StipplePattern, dots: Dots) {
       path.moveTo(x + radius, y);
       path.arc(x, y, radius, 0, Math.PI * 2);
     }
-    ctx.fillStyle = pattern.inks[ink];
+    ctx.fillStyle = style.color;
     ctx.fill(path);
   }
 }
