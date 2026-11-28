@@ -17,13 +17,32 @@
 // gets its own points (dots of different inks may overlap, as in print), or
 // the inks share one set (at most one dot per point).
 
-export type Ink = 'a' | 'b';
+/**
+ * An ink's name: a key of the pattern's `inks`. Two-ink patterns use "a" and
+ * "b"; add more under any other name.
+ */
+export type Ink = string;
 
 export type Source =
   /** 1 at the centre falling to 0 at `radius`, shaped by `gamma`. */
   | {type: 'radial'; x?: number; y?: number; radius: number; gamma?: number}
   /** 0 at `from` rising to 1 at `to`, along `angle` (0° right, 90° down). */
-  | {type: 'linear'; angle: number; from: number; to: number; gamma?: number};
+  | {type: 'linear'; angle: number; from: number; to: number; gamma?: number}
+  /**
+   * A monochrome image, looked up by name in the pattern's `images`: dark
+   * (and opaque) pixels are dense, light or transparent ones empty, or the
+   * other way round with `invert`. Centred on `x`, `y` and `height` pattern
+   * units tall (2, the default, is the full height of the canvas), with its
+   * own aspect ratio; 0 outside it.
+   */
+  | {type: 'image'; image: string; x?: number; y?: number; height?: number; invert?: boolean; gamma?: number};
+
+/**
+ * A greyscale bitmap for an image source: `width × height` densities, 0–255
+ * per pixel, row by row from the top left (255 = full density). Not part of
+ * a pattern's JSON; see `imageDensities` to make one from RGBA pixels.
+ */
+export type StippleImage = {width: number; height: number; data: Uint8Array | Uint8ClampedArray | number[]};
 
 /**
  * Fluted glass with ribs perpendicular to `angle`, `period` apart.
@@ -67,16 +86,35 @@ export type Layer = {
   gain?: number;
 };
 
+/**
+ * An ink's colour and, optionally, its own dot settings. Anything left out
+ * falls back to the pattern's setting of the same name.
+ */
+export type InkStyle = {
+  color: string;
+  spacing?: number;
+  radius?: number;
+  jitter?: number;
+  gain?: number;
+  seed?: number;
+  points?: 'grid' | 'blue-noise';
+  blend?: Blend;
+};
+
 export type StipplePattern = {
   layers: Layer[];
-  inks: {a: string; b: string};
+  /**
+   * Per ink, in drawing order (later inks paint over earlier ones): a colour,
+   * or a colour with dot settings of its own (see InkStyle).
+   */
+  inks: Record<Ink, string | InkStyle>;
   /** Distance between sample cells, in pattern units. */
   spacing: number;
   /** Dot radius, in pattern units. */
   radius: number;
   /** For grid points: 0 = a regular grid, 1 = anywhere in their cell. */
   jitter?: number;
-  /** Scales both densities before sampling. */
+  /** Scales every ink's density before sampling, unless the ink sets its own. */
   gain?: number;
   /**
    * Extra copies of all layers, turned by these angles and combined with the
@@ -85,7 +123,11 @@ export type StipplePattern = {
   copies?: number[];
   /** How layers of the same ink combine; defaults to "screen". */
   blend?: Blend;
-  /** "independent" samples each ink on its own points; "shared" allows one dot per point. */
+  /**
+   * "independent" samples each ink on its own points, with its own dot
+   * settings; "shared" allows one dot per point across all inks, placed by
+   * the first ink's spacing, jitter, points and seed.
+   */
   sampling?: 'independent' | 'shared';
   /**
    * Where dots can go: "grid" is one candidate per cell, moved by `jitter`;
@@ -93,9 +135,33 @@ export type StipplePattern = {
    */
   points?: 'grid' | 'blue-noise';
   seed?: number;
+  /** Bitmaps for image sources, by name. */
+  images?: Record<string, StippleImage>;
 };
 
-export type Densities = {a: number; b: number};
+export type Densities = Record<Ink, number>;
+
+/** An ink's settings with the pattern's filled in where the ink sets none. */
+export type ResolvedInk = Required<InkStyle>;
+
+/** The colour and dot settings an ink is drawn with. */
+export function resolveInk(pattern: StipplePattern, ink: Ink): ResolvedInk {
+  const own = pattern.inks[ink];
+  const style: Partial<InkStyle> = typeof own === 'string' ? {color: own} : (own ?? {});
+  return {
+    color: style.color ?? 'transparent',
+    spacing: style.spacing ?? pattern.spacing,
+    radius: style.radius ?? pattern.radius,
+    jitter: style.jitter ?? pattern.jitter ?? 1,
+    gain: style.gain ?? pattern.gain ?? 1,
+    seed: style.seed ?? pattern.seed ?? 1,
+    points: style.points ?? pattern.points ?? 'grid',
+    blend: style.blend ?? pattern.blend ?? 'screen',
+  };
+}
+
+/** An ink's colour. */
+export const inkColor = (pattern: StipplePattern, ink: Ink) => resolveInk(pattern, ink).color;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const rad = (deg: number) => (deg * Math.PI) / 180;
@@ -168,9 +234,35 @@ function compileWarp(w: Warp): (p: Probe) => void {
   }
 }
 
-function compileSource(src: Source): (x: number, y: number) => number {
+function compileSource(src: Source, images?: Record<string, StippleImage>): (x: number, y: number) => number {
   const gamma = src.gamma ?? 1;
   const shape = (v: number) => (v <= 0 ? 0 : v >= 1 ? 1 : gamma === 1 ? v : Math.pow(v, gamma));
+  if (src.type === 'image') {
+    const img = images?.[src.image];
+    if (!img || !img.width || !img.height) return () => 0;
+    const {width: w, height: h, data} = img;
+    const unit = h / (src.height ?? 2); // pixels per pattern unit
+    const left = (src.x ?? 0) - w / unit / 2;
+    const top = (src.y ?? 0) - h / unit / 2;
+    const invert = src.invert ?? false;
+    const px = (i: number, j: number) => data[j * w + i] / 255;
+    return (x, y) => {
+      // Bilinear between pixel centres, clamped at the edges.
+      const fx = (x - left) * unit - 0.5;
+      const fy = (y - top) * unit - 0.5;
+      if (fx < -0.5 || fy < -0.5 || fx > w - 0.5 || fy > h - 0.5) return 0;
+      const i0 = Math.max(0, Math.min(w - 1, Math.floor(fx)));
+      const j0 = Math.max(0, Math.min(h - 1, Math.floor(fy)));
+      const i1 = Math.min(w - 1, i0 + 1);
+      const j1 = Math.min(h - 1, j0 + 1);
+      const tx = Math.max(0, Math.min(1, fx - i0));
+      const ty = Math.max(0, Math.min(1, fy - j0));
+      const top0 = px(i0, j0) + (px(i1, j0) - px(i0, j0)) * tx;
+      const bottom0 = px(i0, j1) + (px(i1, j1) - px(i0, j1)) * tx;
+      const v = top0 + (bottom0 - top0) * ty;
+      return shape(invert ? 1 - v : v);
+    };
+  }
   if (src.type === 'radial') {
     const cx = src.x ?? 0;
     const cy = src.y ?? 0;
@@ -186,9 +278,12 @@ function compileSource(src: Source): (x: number, y: number) => number {
 }
 
 /** Compiles one layer into a density function of a page point. */
-export function compileLayer(layer: Layer): (x: number, y: number) => number {
+export function compileLayer(
+  layer: Layer,
+  images?: Record<string, StippleImage>,
+): (x: number, y: number) => number {
   const warps = (layer.warps ?? []).map(compileWarp);
-  const read = compileSource(layer.source);
+  const read = compileSource(layer.source, images);
   const gain = layer.gain ?? 1;
   const probe: Probe = {x: 0, y: 0, weight: 1};
   return (x, y) => {
@@ -202,15 +297,38 @@ export function compileLayer(layer: Layer): (x: number, y: number) => number {
 }
 
 /** Density of one layer at a page point. */
-export function layerAt(layer: Layer, x: number, y: number) {
-  return compileLayer(layer)(x, y);
+export function layerAt(layer: Layer, x: number, y: number, images?: Record<string, StippleImage>) {
+  return compileLayer(layer, images)(x, y);
+}
+
+/**
+ * Turns RGBA pixels (as from `getImageData`) into an image source's
+ * densities: darkness times opacity, so black ink on white or on a
+ * transparent background is dense where the ink is.
+ */
+export function imageDensities(width: number, height: number, rgba: ArrayLike<number>): StippleImage {
+  const data = new Uint8Array(width * height);
+  for (let k = 0; k < data.length; k++) {
+    const r = rgba[4 * k];
+    const g = rgba[4 * k + 1];
+    const b = rgba[4 * k + 2];
+    const a = rgba[4 * k + 3] / 255;
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    data[k] = Math.round((255 - luma) * a);
+  }
+  return {width, height, data};
 }
 
 export type Blend = 'screen' | 'max' | 'multiply';
 
 /** Compiles the layers of one ink into its combined density; 0 if it has none. */
-function compileInk(layers: Layer[], ink: Ink, blend: Blend): (x: number, y: number) => number {
-  const parts = layers.filter((layer) => layer.ink === ink).map(compileLayer);
+function compileInk(
+  layers: Layer[],
+  ink: Ink,
+  blend: Blend,
+  images?: Record<string, StippleImage>,
+): (x: number, y: number) => number {
+  const parts = layers.filter((layer) => layer.ink === ink).map((layer) => compileLayer(layer, images));
   if (parts.length === 0) return () => 0;
   return (x, y) => {
     let d = parts[0](x, y);
@@ -222,13 +340,23 @@ function compileInk(layers: Layer[], ink: Ink, blend: Blend): (x: number, y: num
   };
 }
 
+/** "a" and "b", then any other inks the layers use, in order of appearance. */
+const inkNames = (layers: Layer[]) => [...new Set(['a', 'b', ...layers.map((layer) => layer.ink)])];
+
 /**
  * Ink densities (0–1 each) at a page point in pattern units, centre at the
  * origin. Layers of the same ink combine by `blend`: "screen" overlays them
  * like light, "max" keeps the brighter, "multiply" keeps only where all are lit.
  */
-export function densitiesAt(layers: Layer[], x: number, y: number, blend: Blend = 'screen'): Densities {
-  return {a: compileInk(layers, 'a', blend)(x, y), b: compileInk(layers, 'b', blend)(x, y)};
+export function densitiesAt(
+  layers: Layer[],
+  x: number,
+  y: number,
+  blend: Blend = 'screen',
+  images?: Record<string, StippleImage>,
+  inks: Ink[] = inkNames(layers),
+): Densities {
+  return Object.fromEntries(inks.map((ink) => [ink, compileInk(layers, ink, blend, images)(x, y)]));
 }
 
 /** Stateless hash of a grid cell to three uniform numbers in [0, 1). */
@@ -256,36 +384,49 @@ export function stipple(
   emit: (dot: Dot) => void,
 ) {
   const layers = expandCopies(pattern);
-  const blend = pattern.blend ?? 'screen';
-  const inkA = compileInk(layers, 'a', blend);
-  const inkB = compileInk(layers, 'b', blend);
-  const gain = pattern.gain ?? 1;
-  const passes: (Ink | 'both')[] = pattern.sampling === 'shared' ? ['both'] : ['a', 'b'];
-  const each = pattern.points === 'blue-noise' ? blueNoisePoints : gridPoints;
+  // Inks with no layers place no dots, but keep their pass number, so
+  // adding an ink never moves another ink's dots.
+  const names = Object.keys(pattern.inks);
+  const styles = names.map((name) => resolveInk(pattern, name));
+  const used = new Set(layers.map((layer) => layer.ink));
+  const inks = names.map((name, k) =>
+    used.has(name) ? compileInk(layers, name, styles[k].blend, pattern.images) : undefined,
+  );
+  // One pass per ink, each on its own points ("a" is pass 0, "b" pass 1) ...
+  const passes = pattern.sampling === 'shared' ? [-1] : names.map((_, index) => index);
+  const d = new Array<number>(names.length).fill(0);
   for (const pass of passes) {
-    each(pattern, bounds, pass === 'b' ? 1 : 0, (x, y, rank) => {
-      // Each pass reads only the inks it can place.
-      let a = pass === 'b' ? 0 : clamp01(inkA(x, y) * gain);
-      let b = pass === 'a' ? 0 : clamp01(inkB(x, y) * gain);
-      const sum = a + b;
-      if (sum > 1) {
-        a /= sum;
-        b /= sum;
+    if (pass >= 0 && !inks[pass]) continue;
+    // ... or one pass for all of them, sharing the first ink's points.
+    const placement = styles[Math.max(pass, 0)] ?? resolveInk(pattern, 'a');
+    const each = placement.points === 'blue-noise' ? blueNoisePoints : gridPoints;
+    each(placement, bounds, Math.max(pass, 0), (x, y, rank) => {
+      let sum = 0;
+      for (let k = 0; k < names.length; k++) {
+        const ink = inks[k];
+        d[k] = ink && (pass < 0 || pass === k) ? clamp01(ink(x, y) * styles[k].gain) : 0;
+        sum += d[k];
       }
-      if (rank < a) emit({x, y, ink: 'a'});
-      else if (rank < a + b) emit({x, y, ink: 'b'});
+      let edge = 0;
+      for (let k = 0; k < names.length; k++) {
+        edge += sum > 1 ? d[k] / sum : d[k];
+        if (d[k] > 0 && rank < edge) {
+          emit({x, y, ink: names[k]});
+          return;
+        }
+      }
     });
   }
 }
 
 type Bounds = {left: number; top: number; right: number; bottom: number};
+type Placement = Pick<ResolvedInk, 'spacing' | 'jitter' | 'seed'>;
 type Visit = (x: number, y: number, rank: number) => void;
 
 /** One jittered candidate per grid cell, with a random rank. */
-function gridPoints(pattern: StipplePattern, bounds: Bounds, pass: number, visit: Visit) {
-  const {spacing} = pattern;
-  const jitter = pattern.jitter ?? 1;
-  const seed = (pattern.seed ?? 1) + pass * 0x51ed27;
+function gridPoints(placement: Placement, bounds: Bounds, pass: number, visit: Visit) {
+  const {spacing, jitter} = placement;
+  const seed = placement.seed + Math.imul(pass, 0x51ed27);
   const r = [0, 0, 0];
   const j1 = Math.ceil(bounds.bottom / spacing);
   const i1 = Math.ceil(bounds.right / spacing);
@@ -360,14 +501,14 @@ export function blueNoiseTile(seed: number): Float64Array {
 }
 
 /** Blue-noise candidates repeated over the plane; rank is the point's order in its tile. */
-function blueNoisePoints(pattern: StipplePattern, bounds: Bounds, pass: number, visit: Visit) {
-  const {spacing} = pattern;
-  const tile = blueNoiseTile(pattern.seed ?? 1);
+function blueNoisePoints(placement: Placement, bounds: Bounds, pass: number, visit: Visit) {
+  const {spacing} = placement;
+  const tile = blueNoiseTile(placement.seed);
   const count = tile.length / 2;
   const size = TILE * spacing;
-  // The second ink reads the same tile shifted, so its dots fall elsewhere.
-  const ox = pass * 0.37 * size;
-  const oy = pass * 0.61 * size;
+  // Each further ink reads the same tile shifted, so its dots fall elsewhere.
+  const ox = ((pass * 0.37) % 1) * size;
+  const oy = ((pass * 0.61) % 1) * size;
   const ty1 = Math.floor((bounds.bottom - oy) / size);
   const tx1 = Math.floor((bounds.right - ox) / size);
   for (let ty = Math.floor((bounds.top - oy) / size); ty <= ty1; ty++) {

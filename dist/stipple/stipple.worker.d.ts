@@ -9,7 +9,4 @@ export type StippleRequest = {
     };
 };
 /** Dot centres per ink, as x, y pairs in pattern units. */
-export type StippleResponse = {
-    a: Float32Array;
-    b: Float32Array;
-};
+export type StippleResponse = Record<string, Float32Array>;

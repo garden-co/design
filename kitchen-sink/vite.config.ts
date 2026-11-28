@@ -28,5 +28,15 @@ export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [{enforce: 'pre', ...mdx({providerImportSource: undefined})}, react({include: /\.(mdx|tsx?)$/}), principlesSource()],
   server: {fs: {allow: ['..']}},
-  build: {outDir: 'dist', emptyOutDir: true},
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    // The kitchen sink, and the stipple generator on a page of its own.
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('index.html', import.meta.url)),
+        stipple: fileURLToPath(new URL('stipple/index.html', import.meta.url)),
+      },
+    },
+  },
 });

@@ -39,3 +39,10 @@ export declare function gridAnglesPattern(angles?: [number, number, number, numb
  * an aspect ratio of 1.1.
  */
 export declare const heroPattern: StipplePattern;
+/**
+ * Each ink drawn from its own monochrome image instead of a gradient: the
+ * image named "a" drives ink 1, "b" ink 2 (dark pixels are dense). Supply
+ * the bitmaps in `images` (see `imageDensities`); without them the inks stay
+ * empty. Warps still apply, so an image can sit behind fluted glass too.
+ */
+export declare const imagePattern: StipplePattern;

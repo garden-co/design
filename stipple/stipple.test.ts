@@ -4,6 +4,7 @@ import {
   blueNoiseTile,
   densitiesAt,
   expandCopies,
+  imageDensities,
   layerAt,
   rotated,
   stipple,
@@ -11,7 +12,7 @@ import {
   type Layer,
   type StipplePattern,
 } from './stipple.ts';
-import {gridAnglesPattern, gridPattern, stripePattern} from './presets.ts';
+import {gridAnglesPattern, gridPattern, imagePattern, stripePattern} from './presets.ts';
 
 /** The few matchers these tests use, on node:assert. */
 const expect = (actual: unknown) => ({
@@ -229,5 +230,124 @@ describe('gridAnglesPattern', () => {
       pattern.layers.map((layer) => (layer.source.type === 'radial' ? `${layer.source.x},${layer.source.y}` : '')),
     );
     expect(centres.size).toBe(4);
+  });
+});
+
+describe('image sources', () => {
+  // 2 × 2 pixels: dense on the left column, empty on the right.
+  const images = {half: {width: 2, height: 2, data: [255, 0, 255, 0]}};
+  const layer: Layer = {ink: 'a', source: {type: 'image', image: 'half', height: 2}};
+
+  it('reads pixel densities over the image, 0 outside it and without a bitmap', () => {
+    // Two pattern units tall and wide, centred on the origin: pixel centres at ±0.5.
+    expect(layerAt(layer, -0.5, -0.5, images)).toBe(1);
+    expect(layerAt(layer, 0.5, 0.5, images)).toBe(0);
+    expect(layerAt(layer, 0, 0, images)).toBeCloseTo(0.5);
+    expect(layerAt(layer, -1.5, 0, images)).toBe(0);
+    expect(layerAt(layer, -0.5, 0)).toBe(0);
+    const inverted: Layer = {...layer, source: {type: 'image', image: 'half', height: 2, invert: true}};
+    expect(layerAt(inverted, 0.5, 0.5, images)).toBe(1);
+  });
+
+  it('places and scales the image', () => {
+    const moved: Layer = {ink: 'a', source: {type: 'image', image: 'half', x: 1, y: 0, height: 1}};
+    expect(layerAt(moved, 0.75, 0.25, images)).toBe(1);
+    expect(layerAt(moved, 1.25, 0.25, images)).toBe(0);
+    expect(layerAt(moved, 0.25, 0, images)).toBe(0);
+  });
+
+  it('turns RGBA into darkness times opacity', () => {
+    const img = imageDensities(3, 1, [0, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 0]);
+    expect(Array.from(img.data)).toEqual([255, 0, 0]);
+  });
+
+  it('stipples each ink from its own image', () => {
+    const pattern: StipplePattern = {
+      ...imagePattern,
+      spacing: 0.02,
+      // One unit tall, so the 2 × 1 images span x = -1 to 1.
+      layers: imagePattern.layers.map((layer) => ({...layer, source: {...layer.source, height: 1} as Layer['source']})),
+      images: {a: {width: 2, height: 1, data: [255, 0]}, b: {width: 2, height: 1, data: [0, 255]}},
+    };
+    const dots = collect(pattern, -1, -0.5, 1, 0.5);
+    const a = dots.filter((dot) => dot.ink === 'a');
+    const b = dots.filter((dot) => dot.ink === 'b');
+    expect(a.length).toBeGreaterThan(100);
+    expect(b.length).toBeGreaterThan(100);
+    // Inner halves are well clear of the bilinear blend at x = 0.
+    expect(a.filter((dot) => dot.x > 0.5)).toHaveLength(0);
+    expect(b.filter((dot) => dot.x < -0.5)).toHaveLength(0);
+  });
+});
+
+describe('more than two inks', () => {
+  const band = (ink: string, from: number): Layer => ({
+    ink,
+    source: {type: 'image', image: ink, x: from + 0.25, height: 1},
+  });
+  const solid = {width: 1, height: 2, data: [255, 255]};
+  const pattern: StipplePattern = {
+    ...imagePattern,
+    spacing: 0.02,
+    inks: {a: '#000', b: '#111', c: '#222', d: '#333'},
+    // One half-unit-wide band per ink, side by side.
+    layers: [band('a', -1), band('b', -0.5), band('c', 0), band('d', 0.5)],
+    images: {a: solid, b: solid, c: solid, d: solid},
+  };
+
+  it('stipples every ink in its own place', () => {
+    const dots = collect(pattern, -1, -0.5, 1, 0.5);
+    for (const [ink, from] of [['a', -1], ['b', -0.5], ['c', 0], ['d', 0.5]] as const) {
+      const own = dots.filter((dot) => dot.ink === ink);
+      expect(own.length).toBeGreaterThan(50);
+      expect(own.filter((dot) => dot.x < from - 0.01 || dot.x > from + 0.51)).toHaveLength(0);
+    }
+  });
+
+  it('shares points between all inks when asked', () => {
+    const dots = collect({...pattern, sampling: 'shared'}, -1, -0.5, 1, 0.5);
+    expect(new Set(dots.map((dot) => dot.ink)).size).toBe(4);
+    expect(new Set(dots.map((dot) => `${dot.x},${dot.y}`)).size).toBe(dots.length);
+  });
+
+  it('adding an ink leaves the others where they were', () => {
+    const two = {...stripePattern, spacing: 0.02};
+    const three: StipplePattern = {
+      ...two,
+      inks: {...two.inks, c: '#f00'},
+      layers: [...two.layers, {ink: 'c', source: {type: 'radial', radius: 1}}],
+    };
+    const before = collect(two, -1, -1, 1, 1).map(key);
+    const after = collect(three, -1, -1, 1, 1).filter((dot) => dot.ink !== 'c').map(key);
+    expect(after).toEqual(before);
+  });
+
+  it('densitiesAt reports every ink the layers use', () => {
+    expect(Object.keys(densitiesAt(pattern.layers, 0, 0, 'screen', pattern.images))).toEqual(['a', 'b', 'c', 'd']);
+  });
+});
+
+describe('per-ink settings', () => {
+  const base: StipplePattern = {
+    ...imagePattern,
+    spacing: 0.02,
+    images: {a: {width: 1, height: 1, data: [128]}, b: {width: 1, height: 1, data: [128]}},
+  };
+  const count = (pattern: StipplePattern, ink: string) =>
+    collect(pattern, -1, -1, 1, 1).filter((dot) => dot.ink === ink).length;
+
+  it('an ink with its own spacing, gain or seed changes only its own dots', () => {
+    const before = collect(base, -1, -1, 1, 1);
+    const finer: StipplePattern = {...base, inks: {...base.inks, b: {color: '#000', spacing: 0.01, seed: 9}}};
+    const after = collect(finer, -1, -1, 1, 1);
+    expect(after.filter((dot) => dot.ink === 'a').map(key)).toEqual(before.filter((dot) => dot.ink === 'a').map(key));
+    expect(count(finer, 'b')).toBeGreaterThan(3 * count(base, 'b'));
+    const dimmer: StipplePattern = {...base, inks: {...base.inks, a: {color: '#000', gain: 0.5}}};
+    expect(count(dimmer, 'a')).toBeLessThan(0.7 * count(base, 'a'));
+  });
+
+  it('an ink style with no settings of its own draws like a plain colour', () => {
+    const styled: StipplePattern = {...base, inks: {a: {color: '#123'}, b: {color: '#456'}}};
+    expect(collect(styled, -1, -1, 1, 1).map(key)).toEqual(collect(base, -1, -1, 1, 1).map(key));
   });
 });

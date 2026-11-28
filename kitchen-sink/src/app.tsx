@@ -6,17 +6,19 @@ import {OverviewPage} from './pages/overview';
 import {DocsContextPage} from './pages/docs-context';
 import {DashboardContextPage} from './pages/dashboard-context';
 import {PrinciplesPage} from './pages/principles';
-import {StipplePage} from './pages/stipple';
 
 export const PAGES = [
   {id: 'principles', label: 'Principles', render: () => <PrinciplesPage />},
   {id: 'overview', label: 'Components', render: () => <OverviewPage />},
   {id: 'docs', label: 'In context: docs', render: () => <DocsContextPage />},
   {id: 'dashboard', label: 'In context: dashboard', render: () => <DashboardContextPage />},
-  {id: 'stipple', label: 'Stipple patterns', render: () => <StipplePage />},
 ] as const;
 
 export type PageId = (typeof PAGES)[number]['id'];
+
+/** The stipple generator has its own page now; old #stipple links go there. */
+const STIPPLE_PAGE = 'stipple/';
+if (window.location.hash === '#stipple') window.location.replace(STIPPLE_PAGE);
 
 function currentPage(): PageId {
   const id = window.location.hash.slice(1);
@@ -43,6 +45,7 @@ function ThemedApp() {
             {p.label}
           </a>
         ))}
+        <a href={STIPPLE_PAGE}>Stipple patterns ↗</a>
       </nav>
       <SettingsOverlay />
     </>

@@ -127,3 +127,22 @@ export const heroPattern: StipplePattern = {
     {ink: 'b', source: heroRadial(0.66, -0.197), warps: [heroFlute(90, 0.12, true)]},
   ],
 };
+
+/**
+ * Each ink drawn from its own monochrome image instead of a gradient: the
+ * image named "a" drives ink 1, "b" ink 2 (dark pixels are dense). Supply
+ * the bitmaps in `images` (see `imageDensities`); without them the inks stay
+ * empty. Warps still apply, so an image can sit behind fluted glass too.
+ */
+export const imagePattern: StipplePattern = {
+  inks,
+  spacing: 0.0045,
+  radius: 0.0025,
+  gain: 1,
+  seed: 7,
+  points: 'blue-noise',
+  layers: [
+    {ink: 'a', source: {type: 'image', image: 'a', x: 0, y: 0, height: 2}},
+    {ink: 'b', source: {type: 'image', image: 'b', x: 0, y: 0, height: 2}},
+  ],
+};

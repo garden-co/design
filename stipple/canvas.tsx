@@ -1,10 +1,11 @@
 'use client';
 
 import {type CSSProperties, useEffect, useRef} from 'react';
-import {stipple, type StipplePattern} from './stipple.ts';
+import {resolveInk, stipple, type InkStyle, type StipplePattern} from './stipple.ts';
 import type {StippleRequest, StippleResponse} from './stipple.worker.ts';
 
-type Dots = {a: Float32Array; b: Float32Array};
+/** Dot centres per ink, as x, y pairs. */
+type Dots = Record<string, Float32Array>;
 type Bounds = StippleRequest['bounds'];
 
 let worker: Worker | undefined;
@@ -45,9 +46,9 @@ function runNext() {
 }
 
 function collectDots(pattern: StipplePattern, bounds: Bounds): Dots {
-  const dots = {a: [] as number[], b: [] as number[]};
-  stipple(pattern, bounds, (dot) => dots[dot.ink].push(dot.x, dot.y));
-  return {a: Float32Array.from(dots.a), b: Float32Array.from(dots.b)};
+  const dots: Record<string, number[]> = {};
+  stipple(pattern, bounds, (dot) => (dots[dot.ink] ??= []).push(dot.x, dot.y));
+  return Object.fromEntries(Object.entries(dots).map(([ink, xy]) => [ink, Float32Array.from(xy)]));
 }
 
 /** The pattern area a canvas shows: one unit is half its height, centre in the middle. */
@@ -95,7 +96,14 @@ export function StippleCanvas({
       const bounds = boundsOf(width, height);
       const sized = sizePattern(pattern, canvas);
       // Dots depend on the aspect ratio and pixel-pinned details, not the size.
-      const key = JSON.stringify([(width / height).toFixed(3), sized.spacing, sized.radius, sized.layers]);
+      const key = JSON.stringify([
+        (width / height).toFixed(3),
+        sized.spacing,
+        sized.radius,
+        sized.layers,
+        // Ink settings matter, colours don't.
+        Object.entries(sized.inks).map(([ink, style]) => [ink, typeof style === 'string' ? {} : {...style, color: 0}]),
+      ]);
       if (cached?.key !== key) {
         const dots = await computeDots(sized, bounds);
         if (cancelled || !dots) return;
@@ -134,8 +142,27 @@ function sizePattern(pattern: StipplePattern, canvas: HTMLCanvasElement): Stippl
   const radius = px('--pattern-dot-radius');
   const spacing = px('--pattern-dot-spacing');
   const ribUnit = px('--pattern-rib-unit');
+  // Per-ink sizes keep their proportion to the pattern's.
+  const radiusScale = radius ? radius / unit / pattern.radius : 1;
+  const spacingScale = spacing ? spacing / unit / pattern.spacing : 1;
+  const inks =
+    radius || spacing
+      ? Object.fromEntries(
+          Object.entries(pattern.inks).map(([ink, style]): [string, string | InkStyle] => [
+            ink,
+            typeof style === 'string'
+              ? style
+              : {
+                  ...style,
+                  ...(style.radius != null && {radius: round(style.radius * radiusScale)}),
+                  ...(style.spacing != null && {spacing: round(style.spacing * spacingScale)}),
+                },
+          ]),
+        )
+      : pattern.inks;
   return {
     ...pattern,
+    inks,
     radius: radius ? round(radius / unit) : pattern.radius,
     spacing: spacing ? round(spacing / unit) : pattern.spacing,
     layers: ribUnit
@@ -154,18 +181,20 @@ function paint(canvas: HTMLCanvasElement, pattern: StipplePattern, dots: Dots) {
   if (!ctx) return;
   const {width, height} = canvas;
   const scale = height / 2;
-  const radius = Math.max(pattern.radius * scale, 0.5);
   ctx.clearRect(0, 0, width, height);
-  for (const ink of ['a', 'b'] as const) {
-    const path = new Path2D();
+  for (const ink of Object.keys(pattern.inks)) {
     const xy = dots[ink];
+    if (!xy) continue;
+    const style = resolveInk(pattern, ink);
+    const radius = Math.max(style.radius * scale, 0.5);
+    const path = new Path2D();
     for (let i = 0; i < xy.length; i += 2) {
       const x = width / 2 + xy[i] * scale;
       const y = height / 2 + xy[i + 1] * scale;
       path.moveTo(x + radius, y);
       path.arc(x, y, radius, 0, Math.PI * 2);
     }
-    ctx.fillStyle = pattern.inks[ink];
+    ctx.fillStyle = style.color;
     ctx.fill(path);
   }
 }
@@ -173,4 +202,27 @@ function paint(canvas: HTMLCanvasElement, pattern: StipplePattern, dots: Dots) {
 /** Renders `pattern` over the whole canvas at its current pixel size, in place. */
 export function drawStipple(canvas: HTMLCanvasElement, pattern: StipplePattern) {
   paint(canvas, pattern, collectDots(pattern, boundsOf(canvas.width, canvas.height)));
+}
+
+/**
+ * Renders each ink of `pattern` into a canvas of its own, `width × height`
+ * pixels with a transparent background: one plate per ink, as for screen
+ * printing. Dots are worked out once for all inks, so the plates line up
+ * exactly with each other and with `drawStipple`.
+ */
+export function drawStipplePlates(
+  pattern: StipplePattern,
+  width: number,
+  height: number,
+): Record<string, HTMLCanvasElement> {
+  const dots = collectDots(pattern, boundsOf(width, height));
+  return Object.fromEntries(
+    Object.keys(pattern.inks).map((ink) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      paint(canvas, pattern, {[ink]: dots[ink] ?? new Float32Array()});
+      return [ink, canvas];
+    }),
+  );
 }

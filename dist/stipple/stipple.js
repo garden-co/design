@@ -16,6 +16,23 @@
 // which keeps dots evenly spaced at every density and edges crisp. Each ink
 // gets its own points (dots of different inks may overlap, as in print), or
 // the inks share one set (at most one dot per point).
+/** The colour and dot settings an ink is drawn with. */
+export function resolveInk(pattern, ink) {
+    const own = pattern.inks[ink];
+    const style = typeof own === 'string' ? { color: own } : (own ?? {});
+    return {
+        color: style.color ?? 'transparent',
+        spacing: style.spacing ?? pattern.spacing,
+        radius: style.radius ?? pattern.radius,
+        jitter: style.jitter ?? pattern.jitter ?? 1,
+        gain: style.gain ?? pattern.gain ?? 1,
+        seed: style.seed ?? pattern.seed ?? 1,
+        points: style.points ?? pattern.points ?? 'grid',
+        blend: style.blend ?? pattern.blend ?? 'screen',
+    };
+}
+/** An ink's colour. */
+export const inkColor = (pattern, ink) => resolveInk(pattern, ink).color;
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const rad = (deg) => (deg * Math.PI) / 180;
 /**
@@ -82,9 +99,37 @@ function compileWarp(w) {
             };
     }
 }
-function compileSource(src) {
+function compileSource(src, images) {
     const gamma = src.gamma ?? 1;
     const shape = (v) => (v <= 0 ? 0 : v >= 1 ? 1 : gamma === 1 ? v : Math.pow(v, gamma));
+    if (src.type === 'image') {
+        const img = images?.[src.image];
+        if (!img || !img.width || !img.height)
+            return () => 0;
+        const { width: w, height: h, data } = img;
+        const unit = h / (src.height ?? 2); // pixels per pattern unit
+        const left = (src.x ?? 0) - w / unit / 2;
+        const top = (src.y ?? 0) - h / unit / 2;
+        const invert = src.invert ?? false;
+        const px = (i, j) => data[j * w + i] / 255;
+        return (x, y) => {
+            // Bilinear between pixel centres, clamped at the edges.
+            const fx = (x - left) * unit - 0.5;
+            const fy = (y - top) * unit - 0.5;
+            if (fx < -0.5 || fy < -0.5 || fx > w - 0.5 || fy > h - 0.5)
+                return 0;
+            const i0 = Math.max(0, Math.min(w - 1, Math.floor(fx)));
+            const j0 = Math.max(0, Math.min(h - 1, Math.floor(fy)));
+            const i1 = Math.min(w - 1, i0 + 1);
+            const j1 = Math.min(h - 1, j0 + 1);
+            const tx = Math.max(0, Math.min(1, fx - i0));
+            const ty = Math.max(0, Math.min(1, fy - j0));
+            const top0 = px(i0, j0) + (px(i1, j0) - px(i0, j0)) * tx;
+            const bottom0 = px(i0, j1) + (px(i1, j1) - px(i0, j1)) * tx;
+            const v = top0 + (bottom0 - top0) * ty;
+            return shape(invert ? 1 - v : v);
+        };
+    }
     if (src.type === 'radial') {
         const cx = src.x ?? 0;
         const cy = src.y ?? 0;
@@ -99,9 +144,9 @@ function compileSource(src) {
     return (x, y) => shape((x * cos + y * sin - src.from) / (src.to - src.from));
 }
 /** Compiles one layer into a density function of a page point. */
-export function compileLayer(layer) {
+export function compileLayer(layer, images) {
     const warps = (layer.warps ?? []).map(compileWarp);
-    const read = compileSource(layer.source);
+    const read = compileSource(layer.source, images);
     const gain = layer.gain ?? 1;
     const probe = { x: 0, y: 0, weight: 1 };
     return (x, y) => {
@@ -116,12 +161,29 @@ export function compileLayer(layer) {
     };
 }
 /** Density of one layer at a page point. */
-export function layerAt(layer, x, y) {
-    return compileLayer(layer)(x, y);
+export function layerAt(layer, x, y, images) {
+    return compileLayer(layer, images)(x, y);
+}
+/**
+ * Turns RGBA pixels (as from `getImageData`) into an image source's
+ * densities: darkness times opacity, so black ink on white or on a
+ * transparent background is dense where the ink is.
+ */
+export function imageDensities(width, height, rgba) {
+    const data = new Uint8Array(width * height);
+    for (let k = 0; k < data.length; k++) {
+        const r = rgba[4 * k];
+        const g = rgba[4 * k + 1];
+        const b = rgba[4 * k + 2];
+        const a = rgba[4 * k + 3] / 255;
+        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        data[k] = Math.round((255 - luma) * a);
+    }
+    return { width, height, data };
 }
 /** Compiles the layers of one ink into its combined density; 0 if it has none. */
-function compileInk(layers, ink, blend) {
-    const parts = layers.filter((layer) => layer.ink === ink).map(compileLayer);
+function compileInk(layers, ink, blend, images) {
+    const parts = layers.filter((layer) => layer.ink === ink).map((layer) => compileLayer(layer, images));
     if (parts.length === 0)
         return () => 0;
     return (x, y) => {
@@ -133,13 +195,15 @@ function compileInk(layers, ink, blend) {
         return d;
     };
 }
+/** "a" and "b", then any other inks the layers use, in order of appearance. */
+const inkNames = (layers) => [...new Set(['a', 'b', ...layers.map((layer) => layer.ink)])];
 /**
  * Ink densities (0–1 each) at a page point in pattern units, centre at the
  * origin. Layers of the same ink combine by `blend`: "screen" overlays them
  * like light, "max" keeps the brighter, "multiply" keeps only where all are lit.
  */
-export function densitiesAt(layers, x, y, blend = 'screen') {
-    return { a: compileInk(layers, 'a', blend)(x, y), b: compileInk(layers, 'b', blend)(x, y) };
+export function densitiesAt(layers, x, y, blend = 'screen', images, inks = inkNames(layers)) {
+    return Object.fromEntries(inks.map((ink) => [ink, compileInk(layers, ink, blend, images)(x, y)]));
 }
 /** Stateless hash of a grid cell to three uniform numbers in [0, 1). */
 function cellRandom(seed, i, j, out) {
@@ -159,34 +223,43 @@ function cellRandom(seed, i, j, out) {
  */
 export function stipple(pattern, bounds, emit) {
     const layers = expandCopies(pattern);
-    const blend = pattern.blend ?? 'screen';
-    const inkA = compileInk(layers, 'a', blend);
-    const inkB = compileInk(layers, 'b', blend);
-    const gain = pattern.gain ?? 1;
-    const passes = pattern.sampling === 'shared' ? ['both'] : ['a', 'b'];
-    const each = pattern.points === 'blue-noise' ? blueNoisePoints : gridPoints;
+    // Inks with no layers place no dots, but keep their pass number, so
+    // adding an ink never moves another ink's dots.
+    const names = Object.keys(pattern.inks);
+    const styles = names.map((name) => resolveInk(pattern, name));
+    const used = new Set(layers.map((layer) => layer.ink));
+    const inks = names.map((name, k) => used.has(name) ? compileInk(layers, name, styles[k].blend, pattern.images) : undefined);
+    // One pass per ink, each on its own points ("a" is pass 0, "b" pass 1) ...
+    const passes = pattern.sampling === 'shared' ? [-1] : names.map((_, index) => index);
+    const d = new Array(names.length).fill(0);
     for (const pass of passes) {
-        each(pattern, bounds, pass === 'b' ? 1 : 0, (x, y, rank) => {
-            // Each pass reads only the inks it can place.
-            let a = pass === 'b' ? 0 : clamp01(inkA(x, y) * gain);
-            let b = pass === 'a' ? 0 : clamp01(inkB(x, y) * gain);
-            const sum = a + b;
-            if (sum > 1) {
-                a /= sum;
-                b /= sum;
+        if (pass >= 0 && !inks[pass])
+            continue;
+        // ... or one pass for all of them, sharing the first ink's points.
+        const placement = styles[Math.max(pass, 0)] ?? resolveInk(pattern, 'a');
+        const each = placement.points === 'blue-noise' ? blueNoisePoints : gridPoints;
+        each(placement, bounds, Math.max(pass, 0), (x, y, rank) => {
+            let sum = 0;
+            for (let k = 0; k < names.length; k++) {
+                const ink = inks[k];
+                d[k] = ink && (pass < 0 || pass === k) ? clamp01(ink(x, y) * styles[k].gain) : 0;
+                sum += d[k];
             }
-            if (rank < a)
-                emit({ x, y, ink: 'a' });
-            else if (rank < a + b)
-                emit({ x, y, ink: 'b' });
+            let edge = 0;
+            for (let k = 0; k < names.length; k++) {
+                edge += sum > 1 ? d[k] / sum : d[k];
+                if (d[k] > 0 && rank < edge) {
+                    emit({ x, y, ink: names[k] });
+                    return;
+                }
+            }
         });
     }
 }
 /** One jittered candidate per grid cell, with a random rank. */
-function gridPoints(pattern, bounds, pass, visit) {
-    const { spacing } = pattern;
-    const jitter = pattern.jitter ?? 1;
-    const seed = (pattern.seed ?? 1) + pass * 0x51ed27;
+function gridPoints(placement, bounds, pass, visit) {
+    const { spacing, jitter } = placement;
+    const seed = placement.seed + Math.imul(pass, 0x51ed27);
     const r = [0, 0, 0];
     const j1 = Math.ceil(bounds.bottom / spacing);
     const i1 = Math.ceil(bounds.right / spacing);
@@ -263,14 +336,14 @@ export function blueNoiseTile(seed) {
     return out;
 }
 /** Blue-noise candidates repeated over the plane; rank is the point's order in its tile. */
-function blueNoisePoints(pattern, bounds, pass, visit) {
-    const { spacing } = pattern;
-    const tile = blueNoiseTile(pattern.seed ?? 1);
+function blueNoisePoints(placement, bounds, pass, visit) {
+    const { spacing } = placement;
+    const tile = blueNoiseTile(placement.seed);
     const count = tile.length / 2;
     const size = TILE * spacing;
-    // The second ink reads the same tile shifted, so its dots fall elsewhere.
-    const ox = pass * 0.37 * size;
-    const oy = pass * 0.61 * size;
+    // Each further ink reads the same tile shifted, so its dots fall elsewhere.
+    const ox = ((pass * 0.37) % 1) * size;
+    const oy = ((pass * 0.61) % 1) * size;
     const ty1 = Math.floor((bounds.bottom - oy) / size);
     const tx1 = Math.floor((bounds.right - ox) / size);
     for (let ty = Math.floor((bounds.top - oy) / size); ty <= ty1; ty++) {
