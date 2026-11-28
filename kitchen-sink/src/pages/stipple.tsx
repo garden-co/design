@@ -2,8 +2,10 @@ import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
 import {Button} from '@astryxdesign/core/Button';
 import {Heading} from '@astryxdesign/core/Heading';
 import {Text} from '@astryxdesign/core/Text';
+import {zip} from '../zip';
 import {
   drawStipple,
+  drawStipplePlates,
   gridAnglesPattern,
   gridPattern,
   heroPattern,
@@ -198,6 +200,42 @@ function placeholderImages(): Record<string, StippleImage> {
       ctx.stroke();
     }),
   };
+}
+
+/* ---------- Export ---------- */
+
+/** Exports are this many pixels tall; the width follows the aspect. */
+const EXPORT_HEIGHT = 3000;
+
+function download(blob: Blob, name: string) {
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+const pngOf = (canvas: HTMLCanvasElement) =>
+  new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject()), 'image/png'));
+
+/** "stipple-ink-2-146aff.png": number and colour, so plates are easy to tell apart. */
+const plateName = (pattern: StipplePattern, ink: string) =>
+  `stipple-ink-${Object.keys(pattern.inks).indexOf(ink) + 1}-${inkColor(pattern, ink).replace(/[^0-9a-z]/gi, '')}.png`;
+
+/**
+ * Downloads one PNG per ink (the given inks, or all of them in a zip), each
+ * on a transparent background and registered with the full export.
+ */
+async function exportPlates(pattern: StipplePattern, aspect: number, only?: string) {
+  const plates = drawStipplePlates(pattern, Math.round(EXPORT_HEIGHT * aspect), EXPORT_HEIGHT);
+  if (only) return download(await pngOf(plates[only]), plateName(pattern, only));
+  const files = await Promise.all(
+    Object.entries(plates).map(async ([ink, canvas]) => ({
+      name: plateName(pattern, ink),
+      data: new Uint8Array(await (await pngOf(canvas)).arrayBuffer()),
+    })),
+  );
+  download(zip(files), 'stipple-inks.zip');
 }
 
 /* ---------- Controls ---------- */
@@ -505,12 +543,14 @@ function InkCard({
   ink,
   number,
   canRemove,
+  onExport,
   ...layerProps
 }: {
   pattern: StipplePattern;
   ink: string;
   number: number;
   canRemove: boolean;
+  onExport: (ink: string) => void;
   images: Record<string, StippleImage>;
   imageNames: Record<string, string>;
   onPickImage: (name: string, file: File | undefined) => void;
@@ -538,6 +578,7 @@ function InkCard({
         />
         <HexInput label={`Hex colour of ink ${number}`} value={style.color} onChange={(color) => set({color})} />
         <span className="ks-spacer" />
+        <Button label="Export PNG" size="sm" variant="secondary" onClick={() => onExport(ink)} />
         {canRemove && <Button label="Remove ink" size="sm" variant="secondary" onClick={() => commit(removeInk(pattern, ink))} />}
       </div>
       <Group title="Dots">
@@ -617,20 +658,27 @@ export function StipplePage() {
   const moveCentre = (index: number, x: number, y: number) =>
     commit(pattern.layers[index].source.type === 'linear' ? pattern : updateSource(pattern, index, {x, y}));
 
-  const exportPng = () => {
-    const canvas = document.createElement('canvas');
-    canvas.height = 3000;
-    canvas.width = Math.round(3000 * aspect);
-    drawStipple(canvas, drawn);
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'stipple.png';
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
+  const [exporting, setExporting] = useState(false);
+  /** Runs an export after the "Exporting…" label has painted: rendering 3000 px blocks the page. */
+  const run = (work: () => Promise<void> | void) => {
+    setExporting(true);
+    setTimeout(async () => {
+      try {
+        await work();
+      } finally {
+        setExporting(false);
+      }
+    }, 30);
   };
+  const exportPng = () =>
+    run(async () => {
+      const canvas = document.createElement('canvas');
+      canvas.height = EXPORT_HEIGHT;
+      canvas.width = Math.round(EXPORT_HEIGHT * aspect);
+      drawStipple(canvas, drawn);
+      download(await pngOf(canvas), 'stipple.png');
+    });
+  const exportInk = (ink?: string) => run(() => exportPlates(drawn, aspect, ink));
 
   const inks = Object.keys(pattern.inks);
   const layerProps = {images, imageNames, onPickImage: (n: string, f: File | undefined) => void pickImage(n, f), commit};
@@ -660,7 +708,13 @@ export function StipplePage() {
           {showHandles && <CentreHandles pattern={pattern} onMove={moveCentre} />}
         </div>
         <div className="ks-stipple-row">
-          <Button label="Export PNG" onClick={exportPng} />
+          <Button label={exporting ? 'Exporting…' : 'Export PNG'} isDisabled={exporting} onClick={exportPng} />
+          <Button
+            label="Export PNG per ink (zip)"
+            variant="secondary"
+            isDisabled={exporting}
+            onClick={() => exportInk()}
+          />
           <Button
             label={showHandles ? 'Hide handles' : 'Show handles'}
             variant="secondary"
@@ -672,8 +726,9 @@ export function StipplePage() {
           Each ink has its own colour, dots and layers. A layer reads its density from a radial or linear gradient or
           a monochrome image (dark or opaque = dense), optionally seen through fluted glass; an ink's layers combine
           before its dots are placed. Later inks paint over earlier ones. Drag the numbered handles to move a layer's
-          centre. One pattern unit is half the image height. Exports are 3000 px tall with a transparent background;
-          images are not part of the JSON.
+          centre. One pattern unit is half the image height. Exports are 3000 px tall with a transparent background,
+          as one PNG, or one PNG per ink (a zip, or from an ink's card) that line up exactly when stacked. Images are
+          not part of the JSON.
         </Text>
       </div>
       <div className="ks-stipple-column">
@@ -717,6 +772,7 @@ export function StipplePage() {
             ink={ink}
             number={index + 1}
             canRemove={inks.length > 1}
+            onExport={exportInk}
             {...layerProps}
           />
         ))}

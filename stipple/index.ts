@@ -5,4 +5,4 @@
 
 export * from './stipple.ts';
 export * from './presets.ts';
-export {StippleCanvas, drawStipple} from './canvas.tsx';
+export {StippleCanvas, drawStipple, drawStipplePlates} from './canvas.tsx';

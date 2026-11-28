@@ -21,3 +21,10 @@ export declare function StippleCanvas({ pattern, className, style, }: {
 }): import("react").JSX.Element;
 /** Renders `pattern` over the whole canvas at its current pixel size, in place. */
 export declare function drawStipple(canvas: HTMLCanvasElement, pattern: StipplePattern): void;
+/**
+ * Renders each ink of `pattern` into a canvas of its own, `width × height`
+ * pixels with a transparent background: one plate per ink, as for screen
+ * printing. Dots are worked out once for all inks, so the plates line up
+ * exactly with each other and with `drawStipple`.
+ */
+export declare function drawStipplePlates(pattern: StipplePattern, width: number, height: number): Record<string, HTMLCanvasElement>;

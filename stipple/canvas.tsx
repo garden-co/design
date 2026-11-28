@@ -203,3 +203,26 @@ function paint(canvas: HTMLCanvasElement, pattern: StipplePattern, dots: Dots) {
 export function drawStipple(canvas: HTMLCanvasElement, pattern: StipplePattern) {
   paint(canvas, pattern, collectDots(pattern, boundsOf(canvas.width, canvas.height)));
 }
+
+/**
+ * Renders each ink of `pattern` into a canvas of its own, `width × height`
+ * pixels with a transparent background: one plate per ink, as for screen
+ * printing. Dots are worked out once for all inks, so the plates line up
+ * exactly with each other and with `drawStipple`.
+ */
+export function drawStipplePlates(
+  pattern: StipplePattern,
+  width: number,
+  height: number,
+): Record<string, HTMLCanvasElement> {
+  const dots = collectDots(pattern, boundsOf(width, height));
+  return Object.fromEntries(
+    Object.keys(pattern.inks).map((ink) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      paint(canvas, pattern, {[ink]: dots[ink] ?? new Float32Array()});
+      return [ink, canvas];
+    }),
+  );
+}
